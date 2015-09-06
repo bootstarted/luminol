@@ -1,6 +1,6 @@
 {
 	"name": "webpack-udev-server",
-	"version": "0.1.0",
+	"version": "0.1.2",
 	"author": "Izaak Schroeder <izaak.schroeder@gmail.com>",
 	"main": "dist/lib/server.js",
 	"scripts": {
