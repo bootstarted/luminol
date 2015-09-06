@@ -1,0 +1,16 @@
+{
+	"name": "webpack-udev-server",
+	"version": "0.1.0",
+	"author": "Izaak Schroeder <izaak.schroeder@gmail.com>",
+	"main": "dist/lib/server.js",
+	"scripts": {
+		"prepublish": "./node_modules/.bin/babel --stage 0 -s inline -d dist . --ignore dist"
+	},
+	"dependencies": {
+		"webpack": "^1.12.1",
+		"webpack-dev-server": "^1.10.1"
+	},
+	"devDependencies": {
+		"babel": "^5.8.23"
+	}
+}
