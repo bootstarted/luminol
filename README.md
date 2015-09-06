@@ -5,6 +5,9 @@ For universal javascript applications, this server adds the ability to hot-reloa
 
 TODO:
  * [ ] When HMR is not usable, restart the child server,
+ * [ ] If the child server crashes, restart it,
+ * [ ] Better configuration options,
+ * [ ] Implement rest of possible standard HTTP server events,
  * [ ] Testing.
 
 ## Usage
