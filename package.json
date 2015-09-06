@@ -4,9 +4,13 @@
 	"author": "Izaak Schroeder <izaak.schroeder@gmail.com>",
 	"main": "dist/lib/server.js",
 	"scripts": {
-		"prepublish": "./node_modules/.bin/babel --stage 0 -s inline -d dist . --ignore dist"
+		"prepublish": "./node_modules/.bin/babel --stage 0 -s inline -d dist . --ignore dist,node_modules"
+	},
+	"bin": {
+		"webpack-udev-server": "dist/bin/webpack-udev-server.js"
 	},
 	"dependencies": {
+		"yargs": "^3.24.0",
 		"webpack": "^1.12.1",
 		"webpack-dev-server": "^1.10.1"
 	},

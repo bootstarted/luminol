@@ -3,6 +3,10 @@ A universal dev-server for [webpack].
 
 For universal javascript applications, this server adds the ability to hot-reload the rendering code on the server-side in addition to `webpack-dev-server`'s ability to do the same for the client-side.
 
+TODO:
+ * [ ] When HMR is not usable, restart the child server,
+ * [ ] Testing.
+
 ## Usage
 
 Some runtime changes to your code are required for using the universal dev server.
@@ -18,7 +22,7 @@ process.on('assets', ([url, stats]) => {
 server.listen(process.env['PORT']);
 ```
 
-Your server webpack configuration file should include a reference to the hot runtime for the dev server.
+Your server webpack configuration file should include a reference to the hot runtime for the dev server and the hot signal runtime.
 
 ```javascript
 {
@@ -36,7 +40,7 @@ All that's left is to run the dev server using both the server and client webpac
 
 ```sh
 # Specify the path to the server and client webpack config files.
-webpack-udev-server --config client.js --config server.js
+webpack-udev-server --assets client.js --renderer server.js
 ```
 
 You can also run the server programmatically.
