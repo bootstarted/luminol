@@ -4,7 +4,7 @@
 	"author": "Izaak Schroeder <izaak.schroeder@gmail.com>",
 	"main": "dist/lib/server.js",
 	"scripts": {
-		"prepublish": "./node_modules/.bin/babel --stage 0 -s inline -d dist . --ignore dist,node_modules"
+		"prepublish": "./node_modules/.bin/babel --stage 0 -s inline -d dist . --ignore dist,node_modules --source-maps true"
 	},
 	"bin": {
 		"webpack-udev-server": "dist/bin/webpack-udev-server.js"
