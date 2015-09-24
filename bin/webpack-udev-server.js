@@ -48,6 +48,8 @@ function load(entry) {
 	return require(configPath);
 }
 
+process.env.HOT = true;
+
 const server = createServer({
 	client: load(argv.client),
 	server: load(argv.server)
