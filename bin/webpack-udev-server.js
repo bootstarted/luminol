@@ -55,9 +55,13 @@ const server = createServer({
   server: load(argv.server)
 });
 
+server.on('ready', () => {
+  console.log(`💎  Ready.`);
+});
+
 server.listen(process.env.PORT, () => {
   const url = `http://localhost:${server.address().port}/`;
-  console.log(`💎  Ready: ${url}.`);
+  console.log(`💎  Listening: ${url}.`);
   if (!process.env.PORT) {
     open(url);
   }
