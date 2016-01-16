@@ -2,25 +2,43 @@
 
 import open from 'open';
 import yargs from 'yargs';
-import { createServer } from '../lib/server';
-import { resolve } from 'path';
+import { resolve, extname } from 'path';
 import interpret from 'interpret';
+import { createServer } from '../lib';
 
-const argv = yargs.argv;
-const cwd = process.cwd();
+const argv = yargs
+  .option('client', {
+    alias: 'c',
+    description: 'Path to client webpack configuration',
+    requiresArg: true,
+    type: 'string',
+  })
+  .option('server', {
+    alias: 's',
+    description: 'Path to server webpack configuration',
+    requiresArg: true,
+    type: 'string',
+  })
+  .option('hot', {
+    alias: 'H',
+    default: true,
+    description: 'Enable hot-reload.',
+    type: 'boolean',
+  })
+  .argv;
 
 function registerCompiler(moduleDescriptor) {
-  if(moduleDescriptor) {
-    if(typeof moduleDescriptor === "string") {
+  if (moduleDescriptor) {
+    if (typeof moduleDescriptor === 'string') {
       require(moduleDescriptor);
-    } else if(!Array.isArray(moduleDescriptor)) {
+    } else if (!Array.isArray(moduleDescriptor)) {
       moduleDescriptor.register(require(moduleDescriptor.module));
     } else {
-      for(var i = 0; i < moduleDescriptor.length; i++) {
+      for (let i = 0; i < moduleDescriptor.length; i++) {
         try {
           registerCompiler(moduleDescriptor[i]);
           break;
-        } catch(e) {
+        } catch (e) {
           // do nothing
         }
       }
@@ -29,31 +47,37 @@ function registerCompiler(moduleDescriptor) {
 }
 
 function load(entry) {
-  var configPath, ext;
-  var extensions = Object.keys(interpret.extensions).sort(function(a, b) {
+  const extensions = Object.keys(interpret.extensions).sort(function(a, b) {
     return a.length - b.length;
   });
-  configPath = resolve(entry);
-  for(var i = extensions.length - 1; i >= 0; i--) {
-    var tmpExt = extensions[i];
-    if(configPath.indexOf(tmpExt, configPath.length - tmpExt.length) > -1) {
+  const configPath = resolve(entry);
+  let ext;
+  for (let i = extensions.length - 1; i >= 0; i--) {
+    const tmpExt = extensions[i];
+    if (configPath.indexOf(tmpExt, configPath.length - tmpExt.length) > -1) {
       ext = tmpExt;
       break;
     }
   }
-  if(!ext) {
-    ext = path.extname(configPath);
+  if (!ext) {
+    ext = extname(configPath);
   }
   registerCompiler(interpret.extensions[ext]);
-  return require(configPath);
+  const value = require(configPath);
+  if (value && value.__esModule) {
+    return value.default;
+  }
+  return value;
 }
 
-process.env.HOT = true;
+process.env.HOT = argv.hot;
 
 const server = createServer({
   client: load(argv.client),
-  server: load(argv.server)
+  server: load(argv.server),
 });
+
+/* eslint no-console: 0 */
 
 server.on('ready', () => {
   console.log(`💎  Ready.`);
