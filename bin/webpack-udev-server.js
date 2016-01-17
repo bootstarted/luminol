@@ -70,6 +70,7 @@ function load(entry) {
   return value;
 }
 
+global.__IN_DEV_SERVER = true;
 process.env.HOT = argv.hot;
 
 const server = createServer({
