@@ -70,6 +70,7 @@ function load(entry) {
   return value;
 }
 
+global.__IN_DEV_SERVER = true;
 process.env.HOT = argv.hot;
 
 const server = createServer({
@@ -78,9 +79,8 @@ const server = createServer({
 });
 
 /* eslint no-console: 0 */
-
 server.on('ready', () => {
-  console.log(`💎  Ready.`);
+  console.log('💎  Ready.');
 });
 
 server.listen(process.env.PORT, () => {
