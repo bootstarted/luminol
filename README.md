@@ -5,9 +5,7 @@ For universal javascript applications, this server adds the ability to hot-reloa
 
 TODO:
  * [ ] When HMR is not usable, restart the child server,
- * [ ] If the child server crashes, restart it,
  * [ ] Better configuration options,
- * [ ] Implement rest of possible standard HTTP server events,
  * [ ] Testing.
 
 ## Usage
@@ -17,9 +15,11 @@ Some runtime changes to your code are required for using the universal dev serve
 In your `server.js` file the `assets` event is fired whenever the location of and information about the client side assets change. This should be used to adjust the URL in your `<script>` tags.
 
 ```javascript
-process.on('assets', ([url, stats]) => {
-	// Do stuff with asset updates
-});
+if (process.env.HAS_WEBPACK_STATS_EVENTS) {
+  process.on('webpack-stats', (stats) => {
+  	// Do stuff with asset updates
+  });
+}
 
 // Listen.
 server.listen(process.env['PORT']);
@@ -28,14 +28,14 @@ server.listen(process.env['PORT']);
 Your server webpack configuration file should include a reference to the hot runtime for the dev server and the hot signal runtime.
 
 ```javascript
+import {runtime} from 'webpack-udev-server';
 {
 	entry: {
 		server: [
-			'webpack-udev-server/hot/dev-server'
-			'webpack/hot/signal',
-			'./server.js'
-		]
-	}
+			...runtime({ target: 'node' }),
+			'./server.js',
+		],
+	},
 }
 ```
 
