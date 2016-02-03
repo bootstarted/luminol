@@ -2,14 +2,14 @@
   "name": "webpack-udev-server",
   "version": "0.5.0-beta.1",
   "author": "Izaak Schroeder <izaak.schroeder@gmail.com>",
-  "main": "dist/lib/index.js",
+  "main": "index.js",
   "scripts": {
-    "lint": "./node_modules/.bin/eslint --ignore-path .gitignore .",
-    "prepublish": "./node_modules/.bin/babel -s -d dist . --ignore dist,node_modules",
+    "lint": "./node_modules/.bin/eslint .",
+    "prepublish": "./node_modules/.bin/babel -s -d . src",
     "test": "npm run lint"
   },
   "bin": {
-    "webpack-udev-server": "dist/bin/webpack-udev-server.js"
+    "webpack-udev-server": "bin/webpack-udev-server.js"
   },
   "dependencies": {
     "backo": "^1.1.0",

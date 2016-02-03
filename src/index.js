@@ -1,5 +1,5 @@
-import Server from './server';
-import runtime from './runtime';
+import Server from './lib/server';
+import runtime from './lib/runtime';
 
 export {runtime};
 

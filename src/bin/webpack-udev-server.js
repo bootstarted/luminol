@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import open from 'open';
 import yargs from 'yargs';
-import {createServer} from '../lib';
+import {createServer} from '../';
 
 const argv = yargs
   .option('proxy', {
