@@ -14,7 +14,7 @@ const argv = yargs
 global.__IN_DEV_SERVER = true;
 
 const proxies = (
-  Array.isArray(argv.proxy) ? argv.proxy : argv.proxy && [argv.proxy]
+  Array.isArray(argv.proxy) ? argv.proxy : argv.proxy && [argv.proxy] || []
 ).map((url) => {
   return {url};
 });
