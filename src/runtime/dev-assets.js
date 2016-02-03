@@ -4,7 +4,7 @@
 // Otherwise the program will include the IPC runtime when it otherwise does
 // not need to.
 if (process.env.IPC_URL) {
-  module.exports = require('../dist/lib/runtime/dev-assets').default;
+  module.exports = require('../lib/runtime/dev-assets').default;
 } else {
   module.exports = () => (app) => {
     console.warn('You are using dev-assets when you probably shoud not be!');

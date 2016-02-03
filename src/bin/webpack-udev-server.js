@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import open from 'open';
 import yargs from 'yargs';
-import {createServer} from '../lib';
+import {createServer} from '../';
 
 const argv = yargs
   .option('proxy', {
@@ -14,7 +14,7 @@ const argv = yargs
 global.__IN_DEV_SERVER = true;
 
 const proxies = (
-  Array.isArray(argv.proxy) ? argv.proxy : argv.proxy && [argv.proxy]
+  Array.isArray(argv.proxy) ? argv.proxy : argv.proxy && [argv.proxy] || []
 ).map((url) => {
   return {url};
 });
