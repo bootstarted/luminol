@@ -1,31 +1,30 @@
 # webpack-udev-server
-A universal dev-server for [webpack].
 
-For universal javascript applications, this server adds the ability to hot-reload the rendering code on the server-side in addition to `webpack-dev-server`'s ability to do the same for the client-side.
+A better [dev-server] for [webpack].
 
-TODO:
- * [ ] When HMR is not usable, restart the child server,
- * [ ] Better configuration options,
- * [ ] Testing.
+![build status](http://img.shields.io/travis/izaakschroeder/webpack-udev-server/master.svg?style=flat)
+![coverage](http://img.shields.io/coveralls/izaakschroeder/webpack-udev-server/master.svg?style=flat)
+![license](http://img.shields.io/npm/l/webpack-udev-server.svg?style=flat)
+![version](http://img.shields.io/npm/v/webpack-udev-server.svg?style=flat)
+![downloads](http://img.shields.io/npm/dm/webpack-udev-server.svg?style=flat)
+
+Features:
+
+ * Run server-side node applications in development mode.
+ * Parallelized builds for multi-webpack configurations.
+ * Sick emoji logging.
+ * Custom HMR runtime.
+ * Hot-reloading of webpack configuration files.
+ * Universal, detachable IPC.
+ * Simple, dynamic proxying.
+ * Host multiple applications at once.
+
+***IMPORTANT***: We're not battle-tested. Use at your own risk.
 
 ## Usage
 
-Some runtime changes to your code are required for using the universal dev server.
+Some minimal changes to your webpack configuration are required for using the universal dev server:
 
-In your `server.js` file the `assets` event is fired whenever the location of and information about the client side assets change. This should be used to adjust the URL in your `<script>` tags.
-
-```javascript
-if (process.env.HAS_WEBPACK_STATS_EVENTS) {
-  process.on('webpack-stats', (stats) => {
-  	// Do stuff with asset updates
-  });
-}
-
-// Listen.
-server.listen(process.env['PORT']);
-```
-
-Your server webpack configuration file should include a reference to the hot runtime for the dev server and the hot signal runtime.
 
 ```javascript
 import {runtime} from 'webpack-udev-server';
@@ -39,30 +38,65 @@ import {runtime} from 'webpack-udev-server';
 }
 ```
 
-All that's left is to run the dev server using both the server and client webpack configuration files.
+All that's left is to run the dev server using whatever configuration files you want it to run:
 
 ```sh
-# Specify the path to the server and client webpack config files.
-webpack-udev-server --assets client.js --renderer server.js
+#!/bin/sh
+webpack-udev-server client.webpack.config.js server.webpack.config.js
 ```
 
-You can also run the server programmatically.
+Globs are totally supported too:
+
+```sh
+#!/bin/sh
+webpack-udev-server config/*.webpack*.js
+```
+
+### Asset Serving
+
+If your server is also responsible for serving webpack assets to clients you must replace that functionality with the equivalent functionality found in the dev-server – since web assets are generated in memory in development mode, your own asset serving functionality won't work since it won't be able to read that memory.
 
 ```javascript
-import udev from 'webpack-udev-server';
+import devAssets from 'webpack-udev-server/runtime/dev-assets';
 
-import assets from 'some-webpack-client-config.js';
-import render from 'some-webpack-server-config.js';
-
-const server = udev.createServer({
-	assets: assets,
-	render: render
-});
-
-server.listen(8080, () => {
-	console.log('dev server ready: ', this.address().port);
-});
+// Pass the path to the stats file you would normally be serving assets from.
+const middleware = devAssets('path/to/stats.json');
 ```
 
+The resultant middleware is an instance of [http-middleware], meaning you can connect it to `express`, `hapi` or a vanilla `http` server easily.
 
-[webpack]: http://www.google.com
+### Hot Configuration Reloading
+
+Start you server as normal:
+
+```sh
+#!/bin/sh
+webpack-udev-server client.webpack.config.js
+```
+
+Then simply change your config file (e.g. `client.webpack.config.js`). The server will notice this and restart the compiler for you.
+
+### Detached Builds
+
+Start the server with no configuration files:
+
+```sh
+#!/bin/sh
+PORT=7070 webpack-udev-server
+```
+
+Attach as many slaves as you want:
+
+```sh
+#!/bin/sh
+PORT=7070 webpack-udev-server --slave client.webpack.config.js
+```
+
+### Multiple Applications
+
+TODO: Write example.
+
+
+[webpack]: https://webpack.github.io/
+[dev-server]: https://webpack.github.io/docs/webpack-dev-server.html
+[http-middleware]: https://github.com/metalabdesign/http-middleware-metalab

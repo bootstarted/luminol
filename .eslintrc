@@ -1,4 +1,8 @@
 {
+  "rules": {
+    "no-console": 0,
+    "no-magic-numbers": 0
+  },
   "extends": [
     "metalab/base",
     "metalab/node"
