@@ -25,11 +25,12 @@ export default (compiler) => {
   }
 
   const server = http.createServer();
+  const index = 'index.html';
   const app = compose(
     thunk((app) => {
       let result = app;
       compiler.plugin('done', (stats) => {
-        result = match(asset(stats.toJson()), (app) => {
+        result = match(asset(stats.toJson(), {index}), (app) => {
           return {
             ...app,
             request(req, res) {
