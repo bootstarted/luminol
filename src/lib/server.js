@@ -15,11 +15,35 @@ import connect from 'http-middleware-metalab/adapter/http';
 import match from 'http-middleware-metalab/middleware/match';
 import path from 'http-middleware-metalab/middleware/match/path';
 import thunk from 'http-middleware-metalab/middleware/thunk';
+import serve from 'http-middleware-metalab/middleware/serve';
+import header from 'http-middleware-metalab/middleware/header';
+import verbs from 'http-middleware-metalab/middleware/match/verbs';
 
-import {kill} from './util';
+import {kill, updateStats} from './util';
+
+const xx = () => compose(
+  verbs.get('/__webpack_udev', serve({
+    root: join(
+      __dirname,
+      '..',
+      'ui',
+      'dist'
+    ),
+  })),
+  compose(
+    status(302),
+    header('Location', '/__webpack_udev/index.html'),
+    send('Redirecting to UI.')
+  )
+);
+
+const yy = () => compose(
+  status(404),
+  send('webpack-udev-server ready.')
+);
 
 export default class Server extends http.Server {
-  constructor(configs, options = {}) {
+  constructor(configs, {proxies = [], ui = true} = {}) {
     super();
 
     const app = compose(
@@ -34,7 +58,7 @@ export default class Server extends http.Server {
         });
         return () => result;
       }),
-      compose(status(404), send('Hello.'))
+      ui ? xx() : yy()
     )({
       error(err) {
         // TODO: Once the error handling has been standardized, as per:
@@ -87,12 +111,22 @@ export default class Server extends http.Server {
     this.ipc.on('connection', (socket) => {
       // Since we are essentially just a "smart proxy" we take requests to
       // serve things at a particular URL and do so.
-      socket.on('proxy', (info) => {
+      socket.on('proxy', ({url, token}) => {
         // Add proxy to our internal list of proxies.
-        this.proxy({
-          url: info.url,
+        const proxy = this.proxy({
+          url,
           socket: socket.id,
+          token,
         });
+        this.ipc.in(`/compiler`).emit('proxy', proxy);
+        if (proxy.token) {
+          this.ipc.in(`/compiler/${proxy.token}`).emit('proxy', proxy);
+        }
+      });
+
+      socket.on('compile', ({token}) => {
+        this.ipc.in(`/compiler`).emit('compile', {token});
+        this.ipc.in(`/compiler/${token}`).emit('compile', {token});
       });
 
       // Take the resultant stats from child compilers and broadcast them
@@ -100,13 +134,18 @@ export default class Server extends http.Server {
       // which depend on having access to someone else stats object like a
       // server knowing the client's stats.
       socket.on('stats', (stats) => {
-        this.stats[socket.id] = stats;
-        this.ipc.in(`/compiler/${stats.token}`).emit('stats', stats);
-        stats.assets.forEach((asset) => {
-          const path = join(stats.outputPath, asset.name);
-          this.ipc
-            .in(`/file${path}`)
-            .emit('stats', stats, path);
+        const previous = this.stats[socket.id];
+        const result = this.stats[socket.id] = previous ?
+          updateStats(previous, stats) : stats;
+        this.ipc.in(`/compiler`).emit('stats', result);
+        this.ipc.in(`/compiler/${stats.token}`).emit('stats', result);
+        result.assets.forEach((asset) => {
+          if (!asset.old) {
+            const path = join(stats.outputPath, asset.name);
+            this.ipc
+              .in(`/file${path}`)
+              .emit('stats', result, path);
+          }
         });
       });
 
@@ -116,20 +155,30 @@ export default class Server extends http.Server {
           socket: socket.id,
         });
         // Delete all their stats.
+        const stats = this.stats[socket.id];
+        if (stats) {
+          this.ipc.in(`/compiler`).emit('rip', stats.token);
+          this.ipc.in(`/compiler/${stats.token}`).emit('rip', stats.token);
+        }
         delete this.stats[socket.id];
       });
 
-      socket.on('watch-stats', (token) => {
-        socket.join(`/compiler/${token}`);
+      socket.on('watch', (token) => {
+        socket.join(token ? `/compiler/${token}` : '/compiler');
         Object.keys(this.stats).forEach((key) => {
-          if (this.stats[key].token === token) {
+          if (!token || this.stats[key].token === token) {
             socket.emit('stats', this.stats[key]);
+          }
+        });
+        this.proxies.forEach((proxy) => {
+          if (!token || proxy.token === token) {
+            socket.emit('proxy', proxy);
           }
         });
       });
 
-      socket.on('unwatch-stats', (token) => {
-        socket.leave(`/compiler/${token}`);
+      socket.on('unwatch', (token) => {
+        socket.leave(token ? `/compiler/${token}` : '/compiler');
       });
 
       socket.on('watch-file', (file) => {
@@ -149,24 +198,26 @@ export default class Server extends http.Server {
     });
 
     // Add custom proxies if desired.
-    if (options.proxies) {
-      options.proxies.forEach((proxy) => this.proxy(proxy));
+    if (proxies) {
+      proxies.forEach((proxy) => this.proxy(proxy));
     }
   }
 
   proxy(options) {
     const parts = url.parse(options.url);
-    this.proxies.push({
+    const result = {
       target: {
         host: parts.hostname,
         port: parts.port,
       },
       path: parts.pathname,
       ...options,
-    });
+    };
+    this.proxies.push(result);
     console.log(`↔️  ${parts.pathname} => ${options.url}`);
     // Update actual proxy configuration.
     this.emit('proxies', this.proxies);
+    return result;
   }
 
   unproxy(match) {

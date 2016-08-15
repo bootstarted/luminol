@@ -13,7 +13,7 @@ export default ({reload}) => {
 
   // Monitor our own stats for changes. Other services may call `watch` for
   // things they are interested in.
-  ipc.emit('watch-stats', __webpack_dev_token__);
+  ipc.emit('watch', __webpack_dev_token__);
 
   ipc.on('stats', (stats) => {
     // Ignore everything but the update we want. Other stats may end up
