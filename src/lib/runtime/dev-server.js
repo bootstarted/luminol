@@ -1,4 +1,4 @@
-/* global __webpack_public_path__ */
+/* global __webpack_public_path__, __webpack_dev_token__ */
 import http from 'http';
 import ipc from '../ipc';
 import runtime from './common';
@@ -13,6 +13,7 @@ http.Server.prototype.listen = function() {
     const path = __webpack_public_path__ || '/'; // eslint-disable-line
     ipc.emit('proxy', {
       url: `http://localhost:${address.port}${path}`,
+      token: __webpack_dev_token__, // eslint-disable-line
     });
   });
   listen.apply(this, arguments);

@@ -1,0 +1,6 @@
+env:
+  browser: true
+extends:
+  - metalab
+  - metalab/react
+  - metalab/rules/lodash-fp

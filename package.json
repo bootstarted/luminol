@@ -2,10 +2,14 @@
   "name": "webpack-udev-server",
   "version": "0.5.0",
   "author": "Izaak Schroeder <izaak.schroeder@gmail.com>",
+  "license": "CC0-1.0",
+  "repository": "izaakschroeder/webpack-udev-server",
   "main": "index.js",
   "scripts": {
+    "build": "./node_modules/.bin/babel -s -d . src",
+    "build:ui": "cd ui && npm i",
     "lint": "./node_modules/.bin/eslint .",
-    "prepublish": "./node_modules/.bin/babel -s -d . src",
+    "prepublish": "npm run build && npm run build:ui",
     "test": "npm run lint"
   },
   "bin": {
@@ -29,11 +33,13 @@
   },
   "devDependencies": {
     "babel-cli": "^6.4.5",
+    "babel-core": "^6.13.2",
     "babel-preset-metalab": "^0.2.0",
-    "eslint": "^1.10.3",
-    "eslint-config-metalab": "^2.0.0-beta.2",
+    "eslint": "^2.10.2",
+    "eslint-config-metalab": "^4.0.1",
     "eslint-plugin-filenames": "^0.2.0",
-    "eslint-plugin-import": "^0.12.1",
-    "eslint-plugin-react": "^3.16.0"
+    "eslint-plugin-import": "^1.13.0",
+    "eslint-plugin-lodash-fp": "^1.2.0",
+    "eslint-plugin-react": "^5.1.1"
   }
 }

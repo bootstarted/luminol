@@ -1,6 +1,7 @@
 import http from 'http';
 import ipc from '../ipc';
 import compose from 'lodash/flowRight';
+import identity from 'lodash/identity';
 import path from 'path';
 
 import thunk from 'http-middleware-metalab/middleware/thunk';
@@ -9,6 +10,8 @@ import {asset} from 'http-middleware-metalab/middleware/assets';
 import send from 'http-middleware-metalab/middleware/send';
 import status from 'http-middleware-metalab/middleware/status';
 import match from 'http-middleware-metalab/middleware/match';
+import serve from 'http-middleware-metalab/middleware/serve';
+import verbs from 'http-middleware-metalab/middleware/match/verbs';
 import connect from 'http-middleware-metalab/adapter/http';
 
 import MemoryFileSystem from 'memory-fs';
@@ -46,6 +49,12 @@ export default (compiler) => {
       });
       return () => result;
     }),
+    compiler.options.serve ? verbs.get(
+      compiler.options.output.publicPath,
+      serve({
+        root: compiler.options.serve,
+      })
+    ) : identity,
     compose(send(), status(404))
   )({request() {}, error() {}});
 
@@ -54,6 +63,7 @@ export default (compiler) => {
     const path = compiler.options.output.publicPath;
     ipc.emit('proxy', {
       url: `http://localhost:${address.port}${path}`,
+      token: compiler.options.token,
     });
   });
 

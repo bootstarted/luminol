@@ -27,11 +27,14 @@ const argv = yargs
 
 global.__IN_DEV_SERVER = true;
 
+const base = {
+  output: {},
+  plugins: [],
+};
+
 const file = argv._[0];
-const config = (() => {
-  console.log(`⏳  Loading ${path.basename(file)}...`);
-  return load(file);
-})();
+console.log(`⏳  Loading ${path.basename(file)}...`);
+const config = {...base, ...load(file)};
 
 const isDirectory = (path) => {
   return path.charAt(path.length - 1) === '/';
@@ -42,10 +45,11 @@ const isDirectory = (path) => {
 // /lib/JsonpMainTemplate.runtime.js#L27
 if (!config.output.publicPath) {
   config.output.publicPath = '/';
-} if (!isDirectory(config.output.publicPath)) {
+} else if (!isDirectory(config.output.publicPath)) {
   config.output.publicPath += '/';
 }
 
+config.token = token;
 config.plugins.push(new webpack.DefinePlugin({
   __webpack_dev_token__: JSON.stringify(token), // eslint-disable-line
   'process.env.IPC_URL': JSON.stringify(process.env.IPC_URL),
@@ -66,6 +70,12 @@ if (process.env.DUMP_WEBPACK) {
 }
 
 console.log(`🔨  Compiling ${path.basename(file)}...`);
+compiler.plugin('compile', () => {
+  ipc.emit('compile', {
+    token,
+    file,
+  });
+});
 compiler.watch({ }, (err, stats) => {
   if (err) {
     console.error(err);
