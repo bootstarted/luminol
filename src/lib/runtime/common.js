@@ -15,6 +15,15 @@ export default ({reload}) => {
   // things they are interested in.
   ipc.emit('watch', __webpack_dev_token__);
 
+  ipc.on('compile', ({token}) => {
+    // Ignore everything but the update we want. Other stats may end up
+    // getting sent to this app for other reasons.
+    if (token !== __webpack_dev_token__) {
+      return;
+    }
+    console.log('🔥  Compilation in progress.');
+  });
+
   ipc.on('stats', (stats) => {
     // Ignore everything but the update we want. Other stats may end up
     // getting sent to this app for other reasons.
