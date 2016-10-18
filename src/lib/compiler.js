@@ -18,6 +18,7 @@ const options = {
     colors: true,
     modules: false,
     chunks: false,
+    children: false,
   },
 };
 
@@ -49,7 +50,10 @@ if (!config.output.publicPath) {
   config.output.publicPath += '/';
 }
 
-config.token = token;
+Object.defineProperty(config, 'token', {
+  value: token,
+  enumerable: false,
+});
 config.plugins.push(new webpack.DefinePlugin({
   __webpack_dev_token__: JSON.stringify(token), // eslint-disable-line
   'process.env.IPC_URL': JSON.stringify(process.env.IPC_URL),
