@@ -1,6 +1,6 @@
 {
   "name": "webpack-udev-server",
-  "version": "0.5.2",
+  "version": "0.6.0",
   "author": "Izaak Schroeder <izaak.schroeder@gmail.com>",
   "license": "CC0-1.0",
   "repository": "izaakschroeder/webpack-udev-server",
