@@ -27,6 +27,13 @@ export default (compiler) => {
   }
   
   const publicPath = compiler.options.output.publicPath;
+  
+  compiler.plugin('compile', () => {
+    ipc.emit('proxy', {
+      path: publicPath,
+      token: compiler.options.token,
+    });
+  });
 
   const server = http.createServer();
   const index = 'index.html';

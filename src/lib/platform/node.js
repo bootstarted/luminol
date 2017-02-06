@@ -2,11 +2,17 @@ import {fork} from 'child_process';
 import Backoff from 'backo';
 import path from 'path';
 import {kill as _kill} from '../util';
+import ipc from '../ipc';
 
 export default (compiler) => {
   if (compiler.options.target !== 'node') {
     return null;
   }
+  
+  ipc.emit('proxy', {
+    path: compiler.options.output.publicPath,
+    token: compiler.options.token,
+  });
 
   const backoff = new Backoff({min: 0, max: 1000 * 5});
   let child = null;

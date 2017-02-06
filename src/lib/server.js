@@ -8,6 +8,7 @@ import url from 'url';
 import compose from 'lodash/flowRight';
 import matches from 'lodash/matches';
 import reject from 'lodash/reject';
+import unionBy from 'lodash/fp/unionBy';
 import send from 'midori/send';
 import status from 'midori/status';
 import proxy from 'midori/proxy';
@@ -21,26 +22,14 @@ import verbs from 'midori/match/verbs';
 
 import {kill, updateStats} from './util';
 
-const xx = () => compose(
-  verbs.get('/__webpack_udev', serve({
-    root: join(
-      __dirname,
-      '..',
-      'ui',
-      'dist'
-    ),
-  })),
-  compose(
-    status(302),
-    header('Location', '/__webpack_udev/index.html'),
-    send('Redirecting to UI.')
-  )
-);
-
-const yy = () => compose(
-  status(404),
-  send('webpack-udev-server ready.')
-);
+const xx = () => verbs.get('/__webpack_udev', serve({
+  root: join(
+    __dirname,
+    '..',
+    'ui',
+    'dist'
+  ),
+}));
 
 export default class Server extends http.Server {
   constructor(configs, {proxies = [], ui = true} = {}) {
@@ -53,22 +42,26 @@ export default class Server extends http.Server {
           result = proxies.slice().sort((a, b) => {
             return a.path.split('/').length - b.path.split('/').length;
           }).reduce((result, info) => {
-            return match(path(info.path), proxy(info))(result);
+            if (info.target) {
+              return match(path(info.path), proxy(info))(result);
+            }
+            return match(path(info.path), () => app)(result);
           }, app);
         });
         return () => result;
       }),
-      ui ? xx() : yy()
+      ui ? xx() : identity,
     )({
-      error(err) {
+      error: (err) => {
         // TODO: Once the error handling has been standardized, as per:
         // https://github.com/metalabdesign/http-middleware-metalab/issues/30
         // Do something useful here.
         console.log('ERROR', err);
       },
-      request(req, res) {
-        console.log('UNREACHABLE', req.url);
-        res.end();
+      request: (req, res) => {
+        this.once('proxies', () => {
+          app.request(req, res);
+        });
       },
     });
 
@@ -111,12 +104,11 @@ export default class Server extends http.Server {
     this.ipc.on('connection', (socket) => {
       // Since we are essentially just a "smart proxy" we take requests to
       // serve things at a particular URL and do so.
-      socket.on('proxy', ({url, token}) => {
+      socket.on('proxy', (options) => {
         // Add proxy to our internal list of proxies.
         const proxy = this.proxy({
-          url,
+          ...options,
           socket: socket.id,
-          token,
         });
         this.ipc.in(`/compiler`).emit('proxy', proxy);
         if (proxy.token) {
@@ -204,17 +196,22 @@ export default class Server extends http.Server {
   }
 
   proxy(options) {
-    const parts = url.parse(options.url);
+    const parts = options.url && url.parse(options.url);
+    const path = options.path || parts.pathname;
+    if (!path) {
+      console.log('NO PATH 😢');
+      return;
+    }
     const result = {
-      target: {
+      ...options,
+      ...(parts ? {target: {
         host: parts.hostname,
         port: parts.port,
-      },
-      path: parts.pathname,
-      ...options,
+      }} : {}),
+      path,
     };
-    this.proxies.push(result);
-    console.log(`↔️  ${parts.pathname} => ${options.url}`);
+    this.proxies = unionBy(({path}) => path, [result], this.proxies);
+    console.log(`↔️  ${result.path} => ${options.url || '🔄'}`);
     // Update actual proxy configuration.
     this.emit('proxies', this.proxies);
     return result;

@@ -13,6 +13,7 @@ http.Server.prototype.listen = function() {
     const path = __webpack_public_path__ || '/'; // eslint-disable-line
     ipc.emit('proxy', {
       url: `http://localhost:${address.port}${path}`,
+      path,
       token: __webpack_dev_token__, // eslint-disable-line
     });
   });
