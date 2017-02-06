@@ -99,4 +99,4 @@ TODO: Write example.
 
 [webpack]: https://webpack.github.io/
 [dev-server]: https://webpack.github.io/docs/webpack-dev-server.html
-[http-middleware]: https://github.com/metalabdesign/http-middleware-metalab
+[http-middleware]: https://github.com/metalabdesign/midori

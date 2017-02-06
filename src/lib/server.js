@@ -8,16 +8,16 @@ import url from 'url';
 import compose from 'lodash/flowRight';
 import matches from 'lodash/matches';
 import reject from 'lodash/reject';
-import send from 'http-middleware-metalab/middleware/send';
-import status from 'http-middleware-metalab/middleware/status';
-import proxy from 'http-middleware-metalab/middleware/proxy';
-import connect from 'http-middleware-metalab/adapter/http';
-import match from 'http-middleware-metalab/middleware/match';
-import path from 'http-middleware-metalab/middleware/match/path';
-import thunk from 'http-middleware-metalab/middleware/thunk';
-import serve from 'http-middleware-metalab/middleware/serve';
-import header from 'http-middleware-metalab/middleware/header';
-import verbs from 'http-middleware-metalab/middleware/match/verbs';
+import send from 'midori/send';
+import status from 'midori/status';
+import proxy from 'midori/proxy';
+import connect from 'midori/connect';
+import match from 'midori/match';
+import path from 'midori/match/path';
+import thunk from 'midori/thunk';
+import serve from 'midori/serve';
+import header from 'midori/header';
+import verbs from 'midori/match/verbs';
 
 import {kill, updateStats} from './util';
 
