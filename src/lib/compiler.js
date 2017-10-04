@@ -3,6 +3,8 @@ import yargs from 'yargs';
 import webpack from 'webpack';
 import purdy from 'purdy';
 import path from 'path';
+import {entry, plugin} from 'webpack-partial';
+import runtime from './runtime';
 
 import load from './load';
 import ipc from './ipc';
@@ -24,16 +26,18 @@ const options = {
 
 const token = Math.random().toString(36).substr(2);
 const argv = yargs
+  .option('config', {
+    description: 'Config file to load',
+    type: 'string',
+  })
   .argv;
-
-global.__IN_DEV_SERVER = true;
 
 const base = {
   output: {},
   plugins: [],
 };
 
-const file = argv._[0];
+const file = argv.config;
 console.log(`⏳  Loading ${path.basename(file)}...`);
 const config = {...base, ...load(file)};
 
@@ -59,7 +63,22 @@ config.plugins.push(new webpack.DefinePlugin({
   'process.env.IPC_URL': JSON.stringify(process.env.IPC_URL),
 }));
 
-const compiler = webpack(config);
+const withHot = (config) => {
+  const hasHMR = (config.plugins || []).some((x) => {
+    return x instanceof webpack.HotModuleReplacementPlugin;
+  });
+  if (hasHMR) {
+    return config;
+  }
+  return plugin(new webpack.HotModuleReplacementPlugin(), config);
+};
+
+const withRuntime = (config) => {
+  return entry.prepend(runtime({target: config.target || 'web'}), config);
+};
+
+const compiler = webpack(withHot(withRuntime(config)));
+compiler.token = token;
 
 web(compiler);
 node(compiler);
@@ -73,13 +92,21 @@ if (process.env.DUMP_WEBPACK) {
   }));
 }
 
-console.log(`🔨  Compiling ${path.basename(file)}...`);
 compiler.plugin('compile', () => {
   ipc.emit('compile', {
     token,
     file,
   });
 });
+
+compiler.plugin('invalid', () => {
+  ipc.emit('invalid', {
+    token,
+    file,
+  });
+});
+
+console.log(`🔨  Compiling ${path.basename(file)}...`);
 compiler.watch({ }, (err, stats) => {
   if (err) {
     console.error(err);

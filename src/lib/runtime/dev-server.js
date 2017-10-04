@@ -5,6 +5,9 @@ import runtime from './common';
 
 const listen = http.Server.prototype.listen;
 
+// Expose the token to things in `node_modules` that are listed as externals.
+global['__webpack_dev_token__'] = __webpack_dev_token__; // eslint-disable-line
+
 // Hack the HTTP server prototype to send address information upstream.
 http.Server.prototype.listen = function() {
   const _this = this;

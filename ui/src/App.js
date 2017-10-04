@@ -1,4 +1,4 @@
-import {createElement} from 'react';
+import React from 'react';
 import map from 'lodash/fp/map';
 import flow from 'lodash/fp/flow';
 import values from 'lodash/fp/values';
@@ -99,7 +99,7 @@ const List = (({stats}) => {
   );
 });
 
-const ConnectedList = connect(({stats, routes}) => {
+const App = connect(({stats, routes}) => {
   const result = flow(
     values,
     map((stats) => ({
@@ -110,4 +110,4 @@ const ConnectedList = connect(({stats, routes}) => {
   return {stats: result};
 })(List);
 
-export default ConnectedList;
+export default App;

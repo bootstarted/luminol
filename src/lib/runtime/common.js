@@ -11,6 +11,82 @@ export default ({reload}) => {
   let lastStats = null;
   const upToDate = () => lastHash.indexOf(__webpack_hash__) >= 0;
 
+  const getModule = (id) => {
+    if (lastStats && lastStats.modules && lastStats.modules[id]) {
+      return lastStats.modules[id].name;
+    }
+    return `module[${id}]`;
+  };
+
+  const checkz = () => {
+    // webpack 2+
+    if (module.hot.check.length === 1) {
+      return module.hot.check();
+    }
+    // webpack 1
+    return new Promise((resolve, reject) => {
+      module.hot.check(
+        (err, updates) => err ? reject(err) : resolve(updates)
+      );
+    });
+  };
+
+  const applyz = (opts) => {
+    if (module.hot.apply.length === 1) {
+      return module.hot.apply(opts);
+    }
+    return new Promise((resolve, reject) => {
+      module.hot.apply(opts, (err, result) =>
+        err ? reject(err) : resolve(result)
+      );
+    });
+  };
+
+  const printUnaccepted = (unacceptedModules) => {
+    if (unacceptedModules.length > 0) {
+      console.log(
+        unacceptedModules.map((id) => {
+          return ` 🚫  ${getModule(id)}`;
+        }).join('\n')
+      );
+    }
+  };
+
+  const check = () => {
+    checkz().then(function(updatedModules) {
+      if (!updatedModules) {
+        console.warn('🔥  Cannot find update. Need to do a full reload!');
+        reload();
+        return;
+      }
+      applyz({
+        ignoreUnaccepted: true,
+      }).then((renewedModules) => {
+        if (!upToDate()) {
+          check();
+        }
+        const unacceptedModules = unaccepted(renewedModules, updatedModules);
+        if (unacceptedModules.length > 0) {
+          console.log('🔥  Unable to hot reload modules:');
+          printUnaccepted(unacceptedModules);
+          reload();
+        } else {
+          console.log('🔥  Update applied.');
+        }
+        if (upToDate()) {
+          console.log('🔥  App is up to date.');
+        }
+      }).catch((err) => {
+        console.error('🔥  Update application failed.');
+        console.error(err);
+        reload();
+      });
+    }).catch(function(err) {
+      console.error('🔥  Update check failed.');
+      console.error(err);
+    });
+  };
+
   // Monitor our own stats for changes. Other services may call `watch` for
   // things they are interested in.
   ipc.emit('watch', __webpack_dev_token__);
@@ -18,7 +94,7 @@ export default ({reload}) => {
   ipc.on('compile', ({token}) => {
     // Ignore everything but the update we want. Other stats may end up
     // getting sent to this app for other reasons.
-    if (token !== __webpack_dev_token__) {
+    if (token !== __webpack_dev_token__) { // eslint-disable-line
       return;
     }
     console.log('🔥  Compilation in progress.');
@@ -52,57 +128,4 @@ export default ({reload}) => {
       console.log('🔥  Up-to-date!');
     }
   });
-
-  const checkz = () => {
-    return new Promise((resolve, reject) => {
-      module.hot.check((err, updates) => err ? reject(err) : resolve(updates));
-    });
-  };
-
-  const applyz = (opts) => {
-    return new Promise((resolve, reject) => {
-      module.hot.apply(opts, (err, result) =>
-        err ? reject(err) : resolve(result)
-      );
-    });
-  };
-
-  const check = () => {
-    checkz().then(function(updatedModules) {
-      if (!updatedModules) {
-        console.warn('🔥  Cannot find update. Need to do a full reload!');
-        reload();
-        return;
-      }
-      applyz({ignoreUnaccepted: true}).then((renewedModules) => {
-        if (!upToDate()) {
-          check();
-        }
-        const unacceptedModules = unaccepted(renewedModules, updatedModules);
-        if (unacceptedModules.length > 0) {
-          console.log('🔥  Unable to hot reload modules:');
-          console.log(
-            unacceptedModules.map((id) => {
-              if (lastStats && lastStats.modules && lastStats.modules[id]) {
-                return ` 🚫  ${lastStats.modules[id].name}`;
-              }
-              return id;
-            }).join('\n')
-          );
-          reload();
-        } else {
-          console.log('🔥  Update applied.');
-        }
-
-        if (upToDate()) {
-          console.log('🔥  App is up to date.');
-        }
-      }).catch((err) => {
-        console.error(err, module, '🔥  Update application failed.');
-        reload();
-      });
-    }).catch(function(err) {
-      console.error(err, module, '🔥  Update check failed.');
-    });
-  };
 };

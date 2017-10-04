@@ -1,5 +1,6 @@
-node_modules/**/*
+**/node_modules/**
 lib/**/*
 runtime/**/*
 bin/**/*
-*.js
+/*.js
+**/dist/**

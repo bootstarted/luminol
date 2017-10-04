@@ -1,9 +1,6 @@
 const resolve = (entry) => require.resolve(entry);
 
-export default ({target, force = false}) => {
-  if (!force && !global.__IN_DEV_SERVER) {
-    return [];
-  }
+export default ({target}) => {
   if (target === 'node') {
     return [
       './runtime/dev-server',
@@ -13,5 +10,5 @@ export default ({target, force = false}) => {
       './runtime/dev-client',
     ].map(resolve);
   }
-  throw new TypeError();
+  throw new TypeError(`No runtime available for '${target}'.`);
 };

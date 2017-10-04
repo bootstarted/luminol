@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "webpack": "^3.5.6",
+    "webpack-node-externals": "^1.6.0",
+    "webpack-udev-server": "../"
+  }
+}

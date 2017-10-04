@@ -5,24 +5,27 @@ import {watch} from 'chokidar';
 import io from 'socket.io';
 import url from 'url';
 
-import compose from 'lodash/flowRight';
+import {
+  compose,
+  proxy,
+  match,
+  serve,
+  request,
+  connect,
+  get,
+  next,
+  status,
+  send,
+} from 'midori';
+import {path} from 'midori/match';
+
 import matches from 'lodash/matches';
 import reject from 'lodash/reject';
 import unionBy from 'lodash/fp/unionBy';
-import send from 'midori/send';
-import status from 'midori/status';
-import proxy from 'midori/proxy';
-import connect from 'midori/connect';
-import match from 'midori/match';
-import path from 'midori/match/path';
-import thunk from 'midori/thunk';
-import serve from 'midori/serve';
-import header from 'midori/header';
-import verbs from 'midori/match/verbs';
 
 import {kill, updateStats} from './util';
 
-const xx = () => verbs.get('/__webpack_udev', serve({
+const xx = () => get('/__webpack_udev', serve({
   root: join(
     __dirname,
     '..',
@@ -35,35 +38,41 @@ export default class Server extends http.Server {
   constructor(configs, {proxies = [], ui = true} = {}) {
     super();
 
-    const app = compose(
-      thunk((app) => {
-        let result = app;
-        this.on('proxies', (proxies) => {
-          result = proxies.slice().sort((a, b) => {
-            return a.path.split('/').length - b.path.split('/').length;
-          }).reduce((result, info) => {
-            if (info.target) {
-              return match(path(info.path), proxy(info))(result);
-            }
-            return match(path(info.path), () => app)(result);
-          }, app);
-        });
-        return () => result;
-      }),
-      ui ? xx() : identity,
-    )({
-      error: (err) => {
-        // TODO: Once the error handling has been standardized, as per:
-        // https://github.com/metalabdesign/http-middleware-metalab/issues/30
-        // Do something useful here.
-        console.log('ERROR', err);
-      },
-      request: (req, res) => {
+    let proxyApp = next;
+
+    const pending = (timeout = 10000) => {
+      return request(() => new Promise((resolve) => {
+        const timer = setTimeout(() => {
+          resolve(compose(
+            status(504),
+            send('Gateway timeout.'),
+          ));
+        }, timeout);
         this.once('proxies', () => {
-          app.request(req, res);
+          clearTimeout(timer);
+          resolve(compose(proxyApp, pending()));
         });
-      },
+      }));
+    };
+
+    this.on('proxies', (proxies) => {
+      const parts = proxies.slice().sort((a, b) => {
+        return b.path.split('/').length - a.path.split('/').length;
+      }).map((info) => {
+        return match(
+          path(info.path),
+          info.target ? proxy(info) : pending()
+        );
+      });
+      proxyApp = compose(...parts);
     });
+
+    const createApp = compose(
+      ui ? xx() : next,
+      request(() => proxyApp),
+      pending(),
+    );
+    const app = createApp();
 
     this.compilers = {};
     this.configs = configs;
@@ -110,15 +119,21 @@ export default class Server extends http.Server {
           ...options,
           socket: socket.id,
         });
-        this.ipc.in(`/compiler`).emit('proxy', proxy);
+        this.ipc.in('/compiler').emit('proxy', proxy);
         if (proxy.token) {
           this.ipc.in(`/compiler/${proxy.token}`).emit('proxy', proxy);
         }
       });
 
       socket.on('compile', ({token}) => {
-        this.ipc.in(`/compiler`).emit('compile', {token});
+        this.ipc.in('/compiler').emit('compile', {token});
         this.ipc.in(`/compiler/${token}`).emit('compile', {token});
+      });
+
+      socket.on('invalid', ({token, file}) => {
+        this.ipc.in('/compiler').emit('invalid', {token});
+        this.ipc.in(`/compiler/${token}`).emit('invalid', {token});
+        this.ipc.in(`/file${file}`).emit('invalid', {token});
       });
 
       // Take the resultant stats from child compilers and broadcast them
@@ -129,14 +144,14 @@ export default class Server extends http.Server {
         const previous = this.stats[socket.id];
         const result = this.stats[socket.id] = previous ?
           updateStats(previous, stats) : stats;
-        this.ipc.in(`/compiler`).emit('stats', result);
+        this.ipc.in('/compiler').emit('stats', result);
         this.ipc.in(`/compiler/${stats.token}`).emit('stats', result);
         result.assets.forEach((asset) => {
           if (!asset.old) {
             const path = join(stats.outputPath, asset.name);
             this.ipc
               .in(`/file${path}`)
-              .emit('stats', result, path);
+              .emit('stats', result);
           }
         });
       });
@@ -149,7 +164,7 @@ export default class Server extends http.Server {
         // Delete all their stats.
         const stats = this.stats[socket.id];
         if (stats) {
-          this.ipc.in(`/compiler`).emit('rip', stats.token);
+          this.ipc.in('/compiler').emit('rip', stats.token);
           this.ipc.in(`/compiler/${stats.token}`).emit('rip', stats.token);
         }
         delete this.stats[socket.id];
@@ -179,7 +194,7 @@ export default class Server extends http.Server {
           if (this.stats[key].assets.some(({name}) => {
             return join(this.stats[key].outputPath, name) === file;
           })) {
-            socket.emit('stats', this.stats[key], file);
+            socket.emit('stats', this.stats[key]);
           }
         });
       });
@@ -200,7 +215,7 @@ export default class Server extends http.Server {
     const path = options.path || parts.pathname;
     if (!path) {
       console.log('NO PATH 😢');
-      return;
+      return null;
     }
     const result = {
       ...options,
@@ -231,7 +246,7 @@ export default class Server extends http.Server {
     const address = this.address();
     const exe = join(__dirname, 'compiler.js');
     console.log('🚀  Launching compiler for', basename(config));
-    const compiler = this.compilers[config] = fork(exe, [config], {
+    const compiler = this.compilers[config] = fork(exe, ['--config', config], {
       stdio: 'inherit',
       env: {
         ...process.env,
