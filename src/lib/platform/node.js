@@ -1,3 +1,4 @@
+/* eslint-disable no-use-before-define */
 import {fork} from 'child_process';
 import Backoff from 'backo';
 import path from 'path';
@@ -8,10 +9,10 @@ export default (compiler) => {
   if (compiler.options.target !== 'node') {
     return null;
   }
-  
+
   ipc.emit('proxy', {
     path: compiler.options.output.publicPath,
-    token: compiler.options.token,
+    token: compiler.token,
   });
 
   const backoff = new Backoff({min: 0, max: 1000 * 5});
@@ -29,6 +30,14 @@ export default (compiler) => {
     }
   };
 
+  const spawn = () => {
+    if (spawnTimeout) {
+      clearTimeout(spawnTimeout);
+    }
+    kill();
+    spawnTimeout = setTimeout(() => _spawn(), backoff.duration());
+  };
+
   const _spawn = () => {
     const entries = stats.chunks.filter((chunk) => chunk.entry);
     const env = {
@@ -42,33 +51,25 @@ export default (compiler) => {
       throw new Error('Must only export 1 entrypoint!');
     }
     const target = path.join(compiler.outputPath, entries[0].files[0]);
-    console.log(`▶️  Launching ${target}...`);
+    console.log(
+      `▶️  Launching ./${path.relative(compiler.options.context, target)}...`
+    );
     child = fork(target, [], {env});
     child.once('exit', (code) => {
       if (rip) {
         // events.emit('close');
-      } else {
-        if (code === 218) {
-          console.log('🆗  Restart via HMR.');
-        }
+      } else  if (code === 218) {
+        console.log('🆗  Restart via HMR.');
         spawn();
+      } else {
+        console.log('⚰️  Child died. Waiting for app change.');
+        child = null;
       }
     });
     child.once('error', () => {
-      if (rip) {
-        // events.emit('close');
-      } else {
-        spawn();
-      }
+      console.log('⚰️  Child died. Waiting for app change.');
+      child = null;
     });
-  };
-
-  const spawn = () => {
-    if (spawnTimeout) {
-      clearTimeout(spawnTimeout);
-    }
-    kill();
-    spawnTimeout = setTimeout(() => _spawn(), backoff.duration());
   };
 
   process.once('beforeExit', () => {

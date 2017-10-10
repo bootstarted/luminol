@@ -1,10 +1,8 @@
-{
-  "rules": {
-    "no-console": 0,
-    "no-magic-numbers": 0
-  },
-  "extends": [
-    "metalab/base",
-    "metalab/node"
-  ]
-}
+extends:
+  - metalab
+rules:
+  no-console: 0
+env:
+  node: true
+globals:
+  require: true

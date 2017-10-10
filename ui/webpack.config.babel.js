@@ -1,15 +1,17 @@
 import compose from 'lodash/fp/compose';
-import babel from 'webpack-config-babel';
-import sourceMaps from 'webpack-config-source-maps';
 import CopyWebpackPlugin from 'copy-webpack-plugin';
 import path from 'path';
 import {DefinePlugin} from 'webpack';
+import {loader} from 'webpack-partial';
 
 const context = __dirname;
 
 export default compose(
-  babel(),
-  sourceMaps()
+  loader({
+    loader: 'babel-loader',
+    exclude: /(node_modules)/,
+    test: /\.js$/,
+  }),
 )({
   target: 'web',
   context,
@@ -19,7 +21,6 @@ export default compose(
     path: path.join(context, 'dist'),
     publicPath: '/__webpack_udev',
   },
-  serve: context,
   plugins: [
     new CopyWebpackPlugin([
       {from: './index.html'},
