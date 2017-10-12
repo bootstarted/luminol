@@ -22,7 +22,7 @@
     "interpret": "^0.6.6",
     "lodash": "^4.1.0",
     "memory-fs": "^0.3.0",
-    "midori": "^0.4.1",
+    "midori": "^0.4.4",
     "mime-types": "^2.1.14",
     "open": "^0.0.5",
     "openport": "0.0.4",
