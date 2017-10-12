@@ -15,15 +15,26 @@ ipc.on('stats', (result) => {
   });
 });
 
-const getStats = (file) => {
+const getStats = (file, {timeout = 5000} = {}) => {
   if (tokens[file] && stats[tokens[file]]) {
     return Promise.resolve(stats[tokens[file]]);
   }
 
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
+    let timer;
+    if (timeout > 0) {
+      setTimeout(() => {
+        const error = new Error(`Waiting for stats of '${file}' timed out.`);
+        reject(error);
+      }, timeout);
+    }
     const listener = () => {
       if (tokens[file] && stats[tokens[file]]) {
         ipc.off('stats', listener);
+        if (timer) {
+          clearTimeout(timer);
+          timer = null;
+        }
         resolve(stats[tokens[file]]);
       }
     };
@@ -47,6 +58,6 @@ export default (file) => {
   // When we get a stats object from the file we care about then update the
   // middleware to attach the relevant asset information.
   return {
-    poll: () => getStats(source),
+    poll: (options) => getStats(source, options),
   };
 };

@@ -101,7 +101,7 @@ if (argv.slave) {
 
   if (typeof argv.port === 'number') {
     start(argv.port).then(created, error);
-  } else if (process.env.PORT !== '') {
+  } else if (typeof process.env.PORT === 'string' && process.env.PORT !== '') {
     start(parseInt(process.env.PORT, 10)).then(created, error);
   } else {
     openport.find({
