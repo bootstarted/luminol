@@ -23,7 +23,7 @@ import matches from 'lodash/matches';
 import reject from 'lodash/reject';
 import unionBy from 'lodash/fp/unionBy';
 
-import {kill, updateStats} from './util';
+import {killOnExit, kill, updateStats} from './util';
 
 const xx = () => get('/__webpack_udev', serve({
   root: join(
@@ -253,6 +253,7 @@ export default class Server extends http.Server {
         IPC_URL: `http://localhost:${address.port}/`,
       },
     });
+    killOnExit(compiler);
     return compiler;
   }
 

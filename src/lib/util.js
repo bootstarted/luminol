@@ -5,6 +5,9 @@ import flow from 'lodash/fp/flow';
 import sortBy from 'lodash/fp/sortBy';
 
 export const kill = (child, cb = () => {}) => {
+  if (child.killed) {
+    return;
+  }
   let timeout = null;
   child.once('exit', () => {
     if (timeout) {
@@ -29,4 +32,15 @@ export const updateStats = (previous, next) => {
     ...next,
     assets: sortBy('name', [...oldAssets, ...next.assets]),
   };
+};
+
+export const killOnExit = (child) => {
+  process.once('exit', () => {
+    if (!child.killed) {
+      child.kill('SIGTERM');
+    }
+  });
+  process.once('beforeExit', () => {
+    kill(child);
+  });
 };
