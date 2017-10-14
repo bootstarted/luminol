@@ -2,7 +2,7 @@
 import {fork} from 'child_process';
 import Backoff from 'backo';
 import path from 'path';
-import {kill as _kill} from '../util';
+import {kill as _kill, killOnExit} from '../util';
 import ipc from '../ipc';
 
 export default (compiler) => {
@@ -74,8 +74,12 @@ export default (compiler) => {
 
   process.once('beforeExit', () => {
     rip = true;
-    kill();
   });
+  process.once('exit', () => {
+    rip = true;
+  });
+
+  killOnExit(child);
 
   compiler.plugin('done', (_stats) => {
     stats = _stats.toJson();
