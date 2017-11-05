@@ -1,6 +1,8 @@
 **/node_modules/**
 lib/**/*
-runtime/**/*
+internal/**/*
+hub/**/*
+action/**/*
 bin/**/*
 /*.js
 **/dist/**
