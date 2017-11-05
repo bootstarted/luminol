@@ -4,11 +4,10 @@ import ipc from './lib/ipc';
 const stats = {};
 const tokens = {};
 
-ipc.on('invalid', ({token}) => {
+ipc.subscribe('/webpack/invalid/*', ({token}) => {
   stats[token] = null;
 });
-
-ipc.on('stats', (result) => {
+ipc.subscribe('/webpack/stats/*', (result) => {
   stats[result.token] = result;
   result.assets.forEach(({name}) => {
     tokens[join(result.outputPath, name)] = result.token;
@@ -22,6 +21,7 @@ const getStats = (file, {timeout = 5000} = {}) => {
 
   return new Promise((resolve, reject) => {
     let timer;
+    let subscription = null;
     if (timeout > 0) {
       setTimeout(() => {
         const error = new Error(`Waiting for stats of '${file}' timed out.`);
@@ -30,7 +30,9 @@ const getStats = (file, {timeout = 5000} = {}) => {
     }
     const listener = () => {
       if (tokens[file] && stats[tokens[file]]) {
-        ipc.off('stats', listener);
+        if (subscription) {
+          subscription.cancel();
+        }
         if (timer) {
           clearTimeout(timer);
           timer = null;
@@ -38,7 +40,7 @@ const getStats = (file, {timeout = 5000} = {}) => {
         resolve(stats[tokens[file]]);
       }
     };
-    ipc.on('stats', listener);
+    subscription = ipc.subscribe(`/file/stats${file}`, listener);
   });
 };
 
@@ -51,9 +53,6 @@ const getStats = (file, {timeout = 5000} = {}) => {
  */
 export default (file) => {
   const source = resolve(file);
-
-  // Monitor the desired file.
-  ipc.emit('watch-file', source);
 
   // When we get a stats object from the file we care about then update the
   // middleware to attach the relevant asset information.

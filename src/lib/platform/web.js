@@ -14,8 +14,10 @@ import {
 
 import MemoryFileSystem from 'memory-fs';
 
+const supportedTargets = ['web', 'webworker'];
+
 export default (compiler) => {
-  if (compiler.options.target !== 'web') {
+  if (supportedTargets.indexOf(compiler.options.target) === -1) {
     return;
   }
 
@@ -29,7 +31,7 @@ export default (compiler) => {
   const publicPath = compiler.options.output.publicPath;
 
   compiler.plugin('compile', () => {
-    ipc.emit('proxy', {
+    ipc.publish(`/webpack/endpoint/${compiler.token}`, {
       path: publicPath,
       token: compiler.token,
     });
@@ -37,7 +39,7 @@ export default (compiler) => {
 
   compiler.plugin('done', () => {
     const address = server.address();
-    ipc.emit('proxy', {
+    ipc.publish(`/webpack/endpoint/${compiler.token}`, {
       url: `http://localhost:${address.port}${publicPath}`,
       path: publicPath,
       token: compiler.token,

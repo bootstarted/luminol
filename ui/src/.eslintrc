@@ -1,5 +1,0 @@
-env:
-  browser: true
-extends:
-  - metalab
-  - metalab/react

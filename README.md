@@ -11,6 +11,7 @@ A better [dev-server] for [webpack].
 Features:
 
  * Run server-side node applications in development mode.
+ * Supports [react-native].
  * Parallelized builds for multi-webpack configurations.
  * Sick emoji logging.
  * Custom HMR runtime supporting `webpack^1 || webpack^2 || webpack^3`.
@@ -110,3 +111,4 @@ TODO: Write example.
 [dev-server]: https://webpack.github.io/docs/webpack-dev-server.html
 [midori]: https://github.com/metalabdesign/midori
 [midori-webpack]: https://github.com/metalabdesign/midori-webpack
+[react-native]: https://github.com/facebook/react-native

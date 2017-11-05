@@ -1,14 +1,14 @@
 const resolve = (entry) => require.resolve(entry);
 
+const runtimes = {
+  node: resolve('./runtime/node'),
+  web: resolve('./runtime/web'),
+  webworker: resolve('./runtime/webworker'),
+};
+
 export default ({target}) => {
-  if (target === 'node') {
-    return [
-      './runtime/dev-server',
-    ].map(resolve);
-  } else if (target === 'web') {
-    return [
-      './runtime/dev-client',
-    ].map(resolve);
+  if (target in runtimes) {
+    return runtimes[target];
   }
   throw new TypeError(`No runtime available for '${target}'.`);
 };
