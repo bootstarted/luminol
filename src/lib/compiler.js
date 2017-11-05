@@ -1,28 +1,16 @@
 #!/usr/bin/env node
 import yargs from 'yargs';
 import webpack from 'webpack';
-import purdy from 'purdy';
-import path from 'path';
 import {entry, plugin} from 'webpack-partial';
 import runtime from './runtime';
+import {join} from 'path';
 
 import load from './load';
 import ipc from './ipc';
+import {updateStats} from './util';
 
 import web from './platform/web';
 import node from './platform/node';
-
-const options = {
-  stats: {
-    hash: false,
-    cached: false,
-    cachedAssets: false,
-    colors: true,
-    modules: false,
-    chunks: false,
-    children: false,
-  },
-};
 
 const token = Math.random().toString(36).substr(2);
 const argv = yargs
@@ -38,8 +26,15 @@ const base = {
 };
 
 const file = argv.config;
-console.log(`⏳  Loading ${path.basename(file)}...`);
+const modulesBefore = Object.keys(require.cache).reduce((r, x) => {
+  r[x] = true;
+  return r;
+}, {});
 const config = {...base, ...load(file)};
+const modulesAfter = Object.keys(require.cache);
+const usedModules = modulesAfter.filter((x) => {
+  return !modulesBefore[x];
+});
 
 const isDirectory = (path) => {
   return path.charAt(path.length - 1) === '/';
@@ -59,7 +54,7 @@ Object.defineProperty(config, 'token', {
   enumerable: false,
 });
 config.plugins.push(new webpack.DefinePlugin({
-  __webpack_dev_token__: JSON.stringify(token), // eslint-disable-line
+  __webpack_dev_token__: JSON.stringify(token),
   'process.env.IPC_URL': JSON.stringify(process.env.IPC_URL),
 }));
 
@@ -74,50 +69,50 @@ const withHot = (config) => {
 };
 
 const withRuntime = (config) => {
-  return entry.prepend(runtime({target: config.target || 'web'}), config);
+  const value = runtime({target: config.target || 'web'});
+  return entry((previous) => {
+    const last = previous.length - 1;
+    return previous.slice(0, last).concat(value).concat([previous[last]]);
+  }, config);
 };
 
-const compiler = webpack(withHot(withRuntime(config)));
+const finalConfig = withHot(withRuntime(config));
+const compiler = webpack(finalConfig);
 compiler.token = token;
 
 web(compiler);
 node(compiler);
 
-// TODO: Figure out a better way of doing this.
-if (process.env.DUMP_WEBPACK) {
-  console.log(`=====> ${path.basename(file)}`);
-  console.log(purdy.stringify(config, {
-    plain: false,
-    indent: 2,
-  }));
-}
+ipc.publish(`/webpack/config/${token}`, finalConfig);
+ipc.publish(`/webpack/dependencies/${token}`, usedModules);
+ipc.publish(`/webpack/file/${token}`, {file, token});
 
 compiler.plugin('compile', () => {
-  ipc.emit('compile', {
-    token,
-    file,
-  });
+  ipc.publish(`/webpack/compile/${token}`, {token});
 });
 
 compiler.plugin('invalid', () => {
-  ipc.emit('invalid', {
-    token,
-    file,
-  });
+  ipc.publish(`/webpack/invalid/${token}`, {token});
 });
 
-console.log(`🔨  Compiling ${path.basename(file)}...`);
+let previous;
 compiler.watch({ }, (err, stats) => {
   if (err) {
-    console.error(err);
+    err.token = token;
+    ipc.publish(`/webpack/error/${token}`, err);
     process.exit(231);
     return;
   }
   const data = stats.toJson();
-  data.file = file;
   data.token = token;
   data.outputPath = compiler.outputPath;
-  ipc.emit('stats', data);
-
-  console.log(stats.toString(options.stats));
+  const result =  previous ? updateStats(previous, data) : data;
+  previous = result;
+  ipc.publish(`/webpack/stats/${token}`, result);
+  result.assets.forEach((asset) => {
+    if (!asset.old) {
+      const path = join(compiler.outputPath, asset.name);
+      ipc.publish(`/file/stats${path}`, result);
+    }
+  });
 });

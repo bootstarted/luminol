@@ -7,10 +7,9 @@
   "main": "index.js",
   "scripts": {
     "build": "./node_modules/.bin/babel -s -d . src",
-    "build:ui": "cd ui && npm i",
     "lint": "./node_modules/.bin/eslint .",
     "smoke": "./test/smoke/demo.sh",
-    "prepublish": "npm run build && npm run build:ui",
+    "prepublish": "npm run build",
     "test": "npm run lint"
   },
   "bin": {
@@ -19,6 +18,7 @@
   "dependencies": {
     "backo": "^1.1.0",
     "chokidar": "^1.4.2",
+    "faye": "^1.2.4",
     "interpret": "^0.6.6",
     "lodash": "^4.1.0",
     "memory-fs": "^0.3.0",
@@ -27,8 +27,8 @@
     "open": "^0.0.5",
     "openport": "0.0.4",
     "purdy": "^1.6.0",
-    "socket.io": "^2.0.3",
     "socket.io-client": "^2.0.3",
+    "url-join": "^2.0.2",
     "webpack-partial": "^2.1.0",
     "yargs": "^3.24.0"
   },

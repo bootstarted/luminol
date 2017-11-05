@@ -32,9 +32,11 @@ export default ({reload}) => {
   };
 
   const applyz = (opts) => {
+    // webpack 2+
     if (module.hot.apply.length === 1) {
       return module.hot.apply(opts);
     }
+    // webpack 1
     return new Promise((resolve, reject) => {
       module.hot.apply(opts, (err, result) =>
         err ? reject(err) : resolve(result)
@@ -87,26 +89,11 @@ export default ({reload}) => {
     });
   };
 
-  // Monitor our own stats for changes. Other services may call `watch` for
-  // things they are interested in.
-  ipc.emit('watch', __webpack_dev_token__);
-
-  ipc.on('compile', ({token}) => {
-    // Ignore everything but the update we want. Other stats may end up
-    // getting sent to this app for other reasons.
-    if (token !== __webpack_dev_token__) { // eslint-disable-line
-      return;
-    }
+  ipc.subscribe(`/webpack/compile/${__webpack_dev_token__}`, () => {
     console.log('🔥  Compilation in progress.');
   });
 
-  ipc.on('stats', (stats) => {
-    // Ignore everything but the update we want. Other stats may end up
-    // getting sent to this app for other reasons.
-    if (stats.token !== __webpack_dev_token__) { // eslint-disable-line
-      return;
-    }
-
+  ipc.subscribe(`/webpack/stats/${__webpack_dev_token__}`, (stats) => {
     lastStats = stats;
 
     if (!ok(stats)) {

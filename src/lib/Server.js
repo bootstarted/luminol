@@ -1,18 +1,16 @@
 import http from 'http';
 import {fork} from 'child_process';
-import {join, basename} from 'path';
+import {join} from 'path';
 import {watch} from 'chokidar';
-import io from 'socket.io';
+import {NodeAdapter as Faye} from 'faye';
 import url from 'url';
-
+import consoleLog from './console';
 import {
   compose,
   proxy,
   match,
-  serve,
   request,
   connect,
-  get,
   next,
   status,
   send,
@@ -23,19 +21,10 @@ import matches from 'lodash/matches';
 import reject from 'lodash/reject';
 import unionBy from 'lodash/fp/unionBy';
 
-import {killOnExit, kill, updateStats} from './util';
-
-const xx = () => get('/__webpack_udev', serve({
-  root: join(
-    __dirname,
-    '..',
-    'ui',
-    'dist'
-  ),
-}));
+import {killOnExit, kill} from './util';
 
 export default class Server extends http.Server {
-  constructor(configs, {proxies = [], ui = true} = {}) {
+  constructor(configs, {proxies = []} = {}) {
     super();
 
     let proxyApp = next;
@@ -68,13 +57,13 @@ export default class Server extends http.Server {
     });
 
     const createApp = compose(
-      ui ? xx() : next,
       request(() => proxyApp),
       pending(),
     );
     const app = createApp();
 
     this.compilers = {};
+    this.watchers = {};
     this.configs = configs;
     this.proxies = [];
 
@@ -103,105 +92,22 @@ export default class Server extends http.Server {
 
     connect(app, this);
 
-    // io.listen has to come after the normal app because of how it
-    // overwrites the request handlers.
-    this.ipc = io.listen(this, {
-      // TODO: Don't dominate the / namespace!
-      // path: '____',
+    this.bayeux = new Faye({
+      mount: '/__webpack_udev_socket',
+      timeout: 45,
+      ping: 30,
+    });
+    this.bayeux.attach(this);
+    this.ipc = this.bayeux.getClient();
+
+    consoleLog(this.ipc);
+
+    this.ipc.subscribe('/webpack/endpoint/*', (options) => {
+      this.proxy(options);
     });
 
-    this.ipc.on('connection', (socket) => {
-      // Since we are essentially just a "smart proxy" we take requests to
-      // serve things at a particular URL and do so.
-      socket.on('proxy', (options) => {
-        // Add proxy to our internal list of proxies.
-        const proxy = this.proxy({
-          ...options,
-          socket: socket.id,
-        });
-        this.ipc.in('/compiler').emit('proxy', proxy);
-        if (proxy.token) {
-          this.ipc.in(`/compiler/${proxy.token}`).emit('proxy', proxy);
-        }
-      });
-
-      socket.on('compile', ({token}) => {
-        this.ipc.in('/compiler').emit('compile', {token});
-        this.ipc.in(`/compiler/${token}`).emit('compile', {token});
-      });
-
-      socket.on('invalid', ({token, file}) => {
-        this.ipc.in('/compiler').emit('invalid', {token});
-        this.ipc.in(`/compiler/${token}`).emit('invalid', {token});
-        this.ipc.in(`/file${file}`).emit('invalid', {token});
-      });
-
-      // Take the resultant stats from child compilers and broadcast them
-      // to everyone else on the IPC network. This is useful for things
-      // which depend on having access to someone else stats object like a
-      // server knowing the client's stats.
-      socket.on('stats', (stats) => {
-        const previous = this.stats[socket.id];
-        const result = this.stats[socket.id] = previous ?
-          updateStats(previous, stats) : stats;
-        this.ipc.in('/compiler').emit('stats', result);
-        this.ipc.in(`/compiler/${stats.token}`).emit('stats', result);
-        result.assets.forEach((asset) => {
-          if (!asset.old) {
-            const path = join(stats.outputPath, asset.name);
-            this.ipc
-              .in(`/file${path}`)
-              .emit('stats', result);
-          }
-        });
-      });
-
-      // Someone just died.
-      socket.on('disconnect', () => {
-        this.unproxy({
-          socket: socket.id,
-        });
-        // Delete all their stats.
-        const stats = this.stats[socket.id];
-        if (stats) {
-          this.ipc.in('/compiler').emit('rip', stats.token);
-          this.ipc.in(`/compiler/${stats.token}`).emit('rip', stats.token);
-        }
-        delete this.stats[socket.id];
-      });
-
-      socket.on('watch', (token) => {
-        socket.join(token ? `/compiler/${token}` : '/compiler');
-        Object.keys(this.stats).forEach((key) => {
-          if (!token || this.stats[key].token === token) {
-            socket.emit('stats', this.stats[key]);
-          }
-        });
-        this.proxies.forEach((proxy) => {
-          if (!token || proxy.token === token) {
-            socket.emit('proxy', proxy);
-          }
-        });
-      });
-
-      socket.on('unwatch', (token) => {
-        socket.leave(token ? `/compiler/${token}` : '/compiler');
-      });
-
-      socket.on('watch-file', (file) => {
-        socket.join(`/file${file}`);
-        Object.keys(this.stats).forEach((key) => {
-          if (this.stats[key].assets.some(({name}) => {
-            return join(this.stats[key].outputPath, name) === file;
-          })) {
-            socket.emit('stats', this.stats[key]);
-          }
-        });
-      });
-
-      socket.on('unwatch-file', (file) => {
-        socket.leave(`/file${file}`);
-      });
+    this.ipc.subscribe('/webpack/dependencies/*', (deps) => {
+      console.log('GOT DEPS!', deps);
     });
 
     // Add custom proxies if desired.
@@ -214,7 +120,6 @@ export default class Server extends http.Server {
     const parts = options.url && url.parse(options.url);
     const path = options.path || parts.pathname;
     if (!path) {
-      console.log('NO PATH 😢');
       return null;
     }
     const result = {
@@ -226,8 +131,7 @@ export default class Server extends http.Server {
       path,
     };
     this.proxies = unionBy(({path}) => path, [result], this.proxies);
-    console.log(`↔️  ${result.path} => ${options.url || '🔄'}`);
-    // Update actual proxy configuration.
+    this.ipc.publish('/server/proxy/set', result);
     this.emit('proxies', this.proxies);
     return result;
   }
@@ -245,7 +149,7 @@ export default class Server extends http.Server {
     }
     const address = this.address();
     const exe = join(__dirname, 'compiler.js');
-    console.log('🚀  Launching compiler for', basename(config));
+    this.ipc.publish('/server/config/load', config);
     const compiler = this.compilers[config] = fork(exe, ['--config', config], {
       stdio: 'inherit',
       env: {
@@ -258,7 +162,7 @@ export default class Server extends http.Server {
   }
 
   unload(config) {
-    console.log('☠️  Killing compiler for', basename(config));
+    this.ipc.publish('/server/config/unload', config);
     kill(this.compilers[config]);
     delete this.compilers[config];
   }

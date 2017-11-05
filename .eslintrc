@@ -2,6 +2,7 @@ extends:
   - metalab
 rules:
   no-console: 0
+  camelcase: 0
 env:
   node: true
 globals:

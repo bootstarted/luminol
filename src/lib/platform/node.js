@@ -10,7 +10,7 @@ export default (compiler) => {
     return null;
   }
 
-  ipc.emit('proxy', {
+  ipc.publish(`/webpack/endpoint/${compiler.token}`, {
     path: compiler.options.output.publicPath,
     token: compiler.token,
   });

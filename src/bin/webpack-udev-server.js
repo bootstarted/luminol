@@ -2,7 +2,6 @@
 /* eslint no-console: 0 */
 import open from 'open';
 import yargs from 'yargs';
-import path from 'path';
 import openport from 'openport';
 import {createServer} from '../';
 
@@ -29,11 +28,6 @@ const argv = yargs
     type: 'boolean',
     default: false,
   })
-  .option('ui', {
-    description: 'Enable web interface',
-    type: 'boolean',
-    default: true,
-  })
   .help('help')
   .argv;
 
@@ -55,17 +49,6 @@ if (argv.slave) {
 
   const configs = [...argv.config];
 
-  // This is a "live" or self-hosted version of the UI. Normally you don't want
-  // this unless you are hacking on the UI itself.
-  if (argv.ui && process.env.WEBPACK_DEV_UI) {
-    configs.push(path.join(
-      __dirname,
-      '..',
-      'ui',
-      'webpack.config.babel.js'
-    ));
-  }
-
   if (configs.length === 0) {
     console.log('ℹ️  You specified no `config` values.');
   }
@@ -73,7 +56,6 @@ if (argv.slave) {
   const start = (port) => new Promise((resolve, reject) => {
     const server = createServer(configs, {
       proxies: proxies,
-      ui: argv.ui && !process.env.WEBPACK_DEV_UI,
     });
     server.once('error', reject);
     server.listen(port, () => {

@@ -6,18 +6,18 @@ import runtime from './common';
 const listen = http.Server.prototype.listen;
 
 // Expose the token to things in `node_modules` that are listed as externals.
-global['__webpack_dev_token__'] = __webpack_dev_token__; // eslint-disable-line
+global.__webpack_dev_token__ = __webpack_dev_token__;
 
 // Hack the HTTP server prototype to send address information upstream.
 http.Server.prototype.listen = function() {
   const _this = this;
   this.once('listening', () => {
     const address = _this.address();
-    const path = __webpack_public_path__ || '/'; // eslint-disable-line
-    ipc.emit('proxy', {
+    const path = __webpack_public_path__ || '/';
+    ipc.publish(`/webpack/endpoint/${__webpack_dev_token__}`, {
       url: `http://localhost:${address.port}${path}`,
       path,
-      token: __webpack_dev_token__, // eslint-disable-line
+      token: __webpack_dev_token__,
     });
   });
   listen.apply(this, arguments);
