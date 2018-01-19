@@ -1,120 +1,121 @@
 #!/usr/bin/env node
-/* eslint no-console: 0 */
+/* @flow */
 import open from 'open';
 import yargs from 'yargs';
-import path from 'path';
-import openport from 'openport';
-import {createServer} from '../';
 
-const argv = yargs
-  .option('config', {
-    description: 'Config files to load',
-    type: 'array',
-    default: [],
-  })
-  .option('proxy', {
-    description: 'URL to proxy to',
+import createServer from '/internal/server';
+import createProxy from '/internal/proxy';
+import createSupervisor from '/internal/supervisor';
+import createWatcher from '/internal/watcher';
+import createCompiler from '/internal/compiler';
+
+import {proxySet} from '/action/proxy';
+import {pathWatched, pathUnwatched} from '/action/watcher';
+
+import {
+  createServer as createHubServer,
+  createClient as createHubClient,
+} from '/hub';
+
+import consoleLogger from '/internal/console';
+
+yargs
+  .option('hub', {
+    description: 'Hub url',
     type: 'string',
   })
-  .option('port', {
-    description: 'Port to listen on',
-    type: 'number',
+  .command('compile [config]', 'compile webpack config', {
+  }, (argv) => {
+    const hub = createHubClient(argv.hub);
+    const compiler = createCompiler(hub, argv.config);
+    compiler.watch({}, () => {
+      // TODO: Anything here?
+    });
   })
-  .option('slave', {
-    description: 'Host of parent server',
-    type: 'string',
+  .command('proxy [path] [url]', 'proxy given path to given url', {
+
+  }, (argv) => {
+    const hub = createHubClient(argv.hub);
+    hub.dispatch(proxySet({
+      path: argv.path,
+      url: argv.url,
+    }));
+    hub.close();
   })
-  .option('open', {
-    description: 'Automatically open the browser window',
-    type: 'boolean',
-    default: false,
+  .command('add [path]', 'add pattern to be compiled', {
+
+  }, (argv) => {
+    const hub = createHubClient(argv.hub);
+    hub.dispatch(pathWatched(argv.path));
   })
-  .option('ui', {
-    description: 'Enable web interface',
-    type: 'boolean',
-    default: true,
+  .command('remove [path]', 'remove pattern from being compiled', {
+
+  }, (argv) => {
+    const hub = createHubClient(argv.hub);
+    hub.dispatch(pathUnwatched(argv.path));
+  })
+  .command(['serve', '$0'], 'serve stuff', {
+    open: {
+      description: 'Automatically open the browser window',
+      type: 'boolean',
+      default: false,
+    },
+    port: {
+      description: 'Port to listen on',
+      type: 'number',
+    },
+    config: {
+      description: 'Config files to preload',
+      type: 'array',
+      default: [],
+    },
+    log: {
+      description: 'Print events from the hub',
+      default: true,
+    },
+  }, (argv) => {
+    createServer({
+      port: argv.port,
+    }).then((server) => {
+      const url = `http://localhost:${server.address().port}`;
+      log(`💎  Listening: ${url}.`);
+      const hub =
+        argv.hub ? createHubClient(argv.hub) : createHubServer({
+          server,
+          path: '/__webpack_udev_ipc__',
+        });
+      //  log(`💎  Created hub: ${hub.url}.`);
+      if (argv.log) {
+        consoleLogger(hub);
+      }
+
+      // Responsible for taking `PROXY_SET` actions and making them accessible
+      // via the server.
+      createProxy(hub, server, {});
+
+      // Responsible for spawning child compilers. The configs to compile are
+      // set via `CONFIG_LOADED` and `CONFIG_UNLOADED` actions.
+      createSupervisor(hub);
+
+      // Responsible for taking globs and seeing when the underlying fs is
+      // changed. Patterns to watch are set via `PATH_WATCHED` and
+      // `PATCH_UNWATCHED` actions. In response `CONFIG_LOADED` and
+      // `CONFIG_UNLOADED` actions are fired.
+      createWatcher(hub);
+
+      argv.config.forEach((config) => {
+        hub.dispatch(pathWatched(config));
+      });
+
+      if (argv.open) {
+        open(url);
+      }
+    });
   })
   .help('help')
   .argv;
 
-if (argv.slave) {
-  if (argv.config.length !== 1) {
-    console.log('Must provide exactly 1 config in slave mode.');
-    process.exit(1);
-  }
-  // TODO: FIXME: This is kinda hacky.
-  process.env.IPC_URL = argv.slave;
-  yargs.reset();
-  require('../lib/compiler');
-} else {
-  const proxies = (
-    Array.isArray(argv.proxy) ? argv.proxy : argv.proxy && [argv.proxy] || []
-  ).map((url) => {
-    return {url};
-  });
-
-  const configs = [...argv.config];
-
-  // This is a "live" or self-hosted version of the UI. Normally you don't want
-  // this unless you are hacking on the UI itself.
-  if (argv.ui && process.env.WEBPACK_DEV_UI) {
-    configs.push(path.join(
-      __dirname,
-      '..',
-      'ui',
-      'webpack.config.babel.js'
-    ));
-  }
-
-  if (configs.length === 0) {
-    console.log('ℹ️  You specified no `config` values.');
-  }
-
-  const start = (port) => new Promise((resolve, reject) => {
-    const server = createServer(configs, {
-      proxies: proxies,
-      ui: argv.ui && !process.env.WEBPACK_DEV_UI,
-    });
-    server.once('error', reject);
-    server.listen(port, () => {
-      const url = `http://localhost:${server.address().port}/`;
-      console.log(`💎  Listening: ${url}.`);
-      server.url = url;
-      resolve(server);
-    });
-  });
-
-  const created = (server) => {
-    if (argv.open) {
-      open(server.url);
-    }
-    server.on('ready', () => {
-      console.log('💎  Ready.');
-    });
-  };
-
-  const error = (err) => {
-    console.error('⚠️  Error occured.');
-    console.error(err);
-    process.exit(1);
-  };
-
-  if (typeof argv.port === 'number') {
-    start(argv.port).then(created, error);
-  } else if (typeof process.env.PORT === 'string' && process.env.PORT !== '') {
-    start(parseInt(process.env.PORT, 10)).then(created, error);
-  } else {
-    openport.find({
-      startingPort: 8080,
-      createServer: (port, callback) => {
-        start(port).then((server) => callback(null, server), callback);
-      },
-    }, (err, server) => {
-      if (err) {
-        error(err);
-      } else {
-        created(server);
-      }
-    });
-  }
-}
+// TODO: Enable quietness here.
+const log = (msg) => {
+  console.log(msg);
+};

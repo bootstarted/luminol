@@ -1,13 +1,24 @@
 {
-  "plugins": [
-    "syntax-object-rest-spread",
-    "transform-object-rest-spread"
-  ],
+  "env": {
+    "test": {
+      "plugins": [
+        ["babel-plugin-transform-adana", {
+          "only": "src/**/*.js"
+        }]
+      ]
+    }
+  },
   "presets": [
-    ["env", {
+    ["@babel/preset-env", {
       "targets": {
-        "node": "4"
-      }
-    }]
+        "node": 4
+      },
+      "shippedProposals": true
+    }],
+    "@babel/preset-react",
+    "@babel/preset-flow"
+  ],
+  "plugins": [
+    ["module-resolver", {"alias": {"": "./src"}}]
   ]
 }

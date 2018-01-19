@@ -4,5 +4,9 @@ node_modules
 /lib
 /bin
 /*.js
-/runtime
+/hub
+/internal
+/action
+/coverage
 *.map
+*.flow

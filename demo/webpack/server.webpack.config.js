@@ -6,6 +6,7 @@ module.exports = {
   entry: require.resolve('../server'),
   target: 'node',
   externals: [nodeExternals()],
+  mode: 'development',
   output: {
     path: path.resolve(path.join(__dirname, '..', 'dist', 'server')),
   },
