@@ -1,19 +1,17 @@
-/* @flow */
+// @flow
 // import {join} from 'path';
 import {
   webpackCompilerInvalid,
   webpackCompilerCompiling,
   webpackCompilerError,
   webpackCompilerStatsGenerated,
-  fileContentReply,
-  fileContentError,
 } from '/action/compiler';
-import {FILE_CONTENT_REQUEST} from '/action/types';
+import {WEBPACK_STATS} from '/action/types';
 
 import hook from './hook';
-import readFileFromCompiler from './readFileFromCompiler';
 
-import type {Hub, WebpackCompiler, WebpackStats} from '/types';
+import type {WebpackCompiler, WebpackStats} from '/types';
+import type {Hub} from '/hub/types';
 
 /**
  * Handles hooking the webpack compiler.
@@ -27,31 +25,29 @@ const observeCompiler = (
   compiler: WebpackCompiler
 ) => {
   let previous: WebpackStats;
-  let invalid = false;
+  let invalid = true;
 
   hook(compiler, 'compile', () => {
     hub.dispatch(webpackCompilerCompiling());
   });
 
+  hub.subscribe('@@hub/subscribe', ({payload}) => {
+    // TODO: FIXME: Fix this!
+    // $ExpectError
+    if (payload.pattern === WEBPACK_STATS) {
+      if (previous && !invalid) {
+        hub.dispatch(webpackCompilerStatsGenerated(previous, {
+          // TODO: FIXME: Fix this!
+          // $ExpectError
+          replyTo: payload.id,
+        }));
+      }
+    }
+  });
+
   hook(compiler, 'invalid', () => {
     invalid = true;
     hub.dispatch(webpackCompilerInvalid());
-  });
-
-  hub.provide(FILE_CONTENT_REQUEST, ({payload}, reply) => {
-    if (!payload || !payload.file || invalid) {
-      return;
-    }
-    const {file} = payload;
-    readFileFromCompiler(compiler, file).then((data) => {
-      reply(fileContentReply(file, data.toString('base64')));
-    }, (err) => {
-      if (err.code === 'ENOENT') {
-        return;
-      }
-      // TODO: Maybe include file too?
-      reply(fileContentError(err));
-    });
   });
 
   hook(compiler, 'done', (stats) => {
@@ -62,12 +58,12 @@ const observeCompiler = (
     // The compiler seems to want to go on a rampage compiling a whole bunch
     // of stuff over and over with the same hash.
     // Seems like this: https://github.com/webpack/watchpack/issues/25
-    invalid = false;
     if (previous && previous.hash === data.hash) {
       return;
     }
     previous = data;
     hub.dispatch(webpackCompilerStatsGenerated(data, {}));
+    invalid = false;
   });
 
   hook(compiler, 'failed', (err) => {

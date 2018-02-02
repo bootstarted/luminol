@@ -1,15 +1,20 @@
-/* @flow */
+// @flow
 import {Server} from 'ws';
 import createHub from './internal/createHub';
 import handleMessage from './internal/handleMessage';
-import createDemand from './internal/createDemand';
-import createNamespace from './internal/createNamespace';
 
 import type {Server as HTTPServer} from 'http';
+import type {Pattern, Action} from './types';
 
 type Options = {
   server: HTTPServer,
   path: string,
+};
+
+type Handlers = {
+  SUBSCRIBE: ({match: Pattern, id: string}) => void,
+  UNSUBSCRIBE: ({id: string}) => void,
+  ACTION: (a: Action) => void,
 };
 
 const createServer = (options: Options) => {
@@ -29,11 +34,20 @@ const createServer = (options: Options) => {
   wss.on('listening', updateUrl);
 
   wss.on('connection', (ws) => {
-    ws.matches = [];
     ws.subs = {};
-    const handlers = {
+    const handlers: Handlers = {
       SUBSCRIBE: ({match, id}) => {
-        const _unsub = hub.subscribe(match, (payload) => {
+        const _unsub = hub.subscribe(match, (next) => {
+          let payload = next;
+          if (next.meta && (typeof next.meta.replyTo !== 'undefined')) {
+            payload = {
+              ...next,
+              meta: {
+                ...next.meta,
+                replyTo: id,
+              },
+            };
+          }
           ws.send(JSON.stringify({type: 'ACTION', payload}));
         });
         const unsubscribe = () => {
@@ -69,14 +83,8 @@ const createServer = (options: Options) => {
     // TODO: Just ignore errors?
   });
 
-  const eventHub = createNamespace(hub, 'event');
-  const demandHub = createNamespace(hub, 'demand');
-  const demand = createDemand(demandHub);
-
-  wss.dispatch = eventHub.dispatch;
-  wss.subscribe = eventHub.subscribe;
-  wss.provide = demand.provide;
-  wss.demand = demand;
+  wss.dispatch = hub.dispatch;
+  wss.subscribe = hub.subscribe;
   return wss;
 };
 

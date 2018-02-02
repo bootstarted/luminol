@@ -1,3 +1,4 @@
+// @flow
 import WebSocket from 'ws';
 import createClientFactory from './createClient';
 

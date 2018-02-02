@@ -1,4 +1,4 @@
-/* @flow */
+// @flow
 import {unaccepted} from './util';
 import {
   WEBPACK_STATS,
@@ -12,9 +12,10 @@ import {
 } from '/action/types';
 
 import type {Hub} from '/hub/types';
+import type {WebpackStats} from '/types';
 import createHub from '/hub/internal/createHub';
 
-const ok = (stats) => {
+const ok = (stats: WebpackStats) => {
   return (!stats.errors || stats.errors.length === 0);
 };
 
@@ -31,9 +32,8 @@ declare var module: {
       callback?: (err: ?Error, updates: Array<*>) => void
     ): Promise<*>,
     apply(
-      opts: Object,
-      callback?: (err: ?Error, result: any
-    ) => void): Promise<*>,
+      opts: *,
+      callback?: (err: ?Error, result: *) => void): Promise<*>,
     status(): string,
   },
 };
@@ -71,12 +71,12 @@ const applyz = (opts) => {
 
 export default ({reload, hub, name}: Options) => {
   let lastHash = '';
-  let lastStats = null;
+  let lastStats: ?WebpackStats = null;
   const internalHub = createHub();
 
   const upToDate = () => lastHash.indexOf(__webpack_hash__) >= 0;
 
-  const getModule = (id) => {
+  const getModule = (id: string) => {
     if (lastStats && lastStats.modules && lastStats.modules[id]) {
       return lastStats.modules[id].name;
     }
@@ -119,17 +119,20 @@ export default ({reload, hub, name}: Options) => {
   };
 
   hub.subscribe(WEBPACK_STATS, ({payload: stats, meta}) => {
-    if (!stats || !meta || name !== meta.name) {
+    if ((typeof stats !== 'object') || !meta || name !== meta.name) {
       return;
     }
-    lastStats = stats;
 
-    if (!ok(stats)) {
+    // TODO: FIXME: Make flow happy with this.
+    // $ExpectError
+    lastStats = (stats: WebpackConfig);
+
+    if (!ok(lastStats)) {
       internalHub.dispatch({type: APP_ERRORS_DETECTED});
       return;
     }
 
-    lastHash = stats.hash;
+    lastHash = lastStats.hash;
     if (!upToDate()) {
       if (module.hot) {
         if (module.hot.status() === 'idle') {

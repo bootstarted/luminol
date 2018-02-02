@@ -3,6 +3,7 @@ const path = require('path');
 const StatsPlugin = require('stats-webpack-plugin');
 
 module.exports = {
+  name: 'client',
   entry: require.resolve('../client'),
   target: 'web',
   mode: 'development',

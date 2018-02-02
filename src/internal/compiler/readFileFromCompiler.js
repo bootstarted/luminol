@@ -1,4 +1,4 @@
-/* @flow */
+// @flow
 import nodeFs from 'fs';
 import path from 'path';
 
@@ -14,8 +14,8 @@ import type {WebpackCompiler} from '/types';
  */
 const readFileFromCompiler = (
   compiler: WebpackCompiler,
-  file: string
-): Promise<Buffer> => {
+  file: string,
+): Promise<Buffer | string> => {
   // TODO: The `fs` here pretty much only works with `MemoryFileSystem`. The
   // webpack@4 `NodeOutputFileSystem` doesn't have any of the functions that
   // are required to read files – only write them.
@@ -25,7 +25,10 @@ const readFileFromCompiler = (
     path.join(compiler.outputPath, file) : file;
 
   return new Promise((resolve, reject) => {
-    fs.readFile(resolved, (err, result) => {
+    fs.readFile(resolved, (
+      err: ?ErrnoError,
+      result: Buffer | string
+    ) => {
       err ? reject(err) : resolve(result);
     });
   });

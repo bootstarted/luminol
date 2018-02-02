@@ -1,4 +1,4 @@
-/* @flow */
+// @flow
 import type {WebpackCompiler} from '/types';
 
 const camelize = (str: string): string =>
@@ -14,7 +14,7 @@ const camelize = (str: string): string =>
 const hook = (
   compiler: WebpackCompiler,
   event: string,
-  callback: Function,
+  callback: (...args: Array<*>) => *,
 ): void => {
   // TODO: Consider returning an unhook function à la hub.
   if (compiler.hooks) {

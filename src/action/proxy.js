@@ -1,4 +1,4 @@
-/* @flow */
+// @flow
 import {PROXY_SET} from './types';
 
 // TODO: This is probably duplicated somewhere. Fix it.

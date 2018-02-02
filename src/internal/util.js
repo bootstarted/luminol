@@ -1,5 +1,19 @@
-export const kill = (child, cb = () => {}) => {
-  if (child.killed) {
+// @flow
+type Callback = () => void;
+
+export const alive = (child: child_process$ChildProcess): boolean => {
+  try {
+    return !!process.kill(child.pid, 0);
+  } catch (e) {
+    return e.code === 'EPERM';
+  }
+};
+
+export const kill = (
+  child: child_process$ChildProcess,
+  cb: Callback = () => {}
+) => {
+  if (!alive(child)) {
     return;
   }
   let timeout = null;
@@ -16,9 +30,9 @@ export const kill = (child, cb = () => {}) => {
   }, 3000);
 };
 
-export const killOnExit = (child) => {
+export const killOnExit = (child: child_process$ChildProcess) => {
   process.once('exit', () => {
-    if (!child.killed) {
+    if (alive(child)) {
       child.kill('SIGTERM');
     }
   });

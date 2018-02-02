@@ -1,9 +1,11 @@
-/* @flow */
+// @flow
 import {proxySet} from '/action/proxy';
 import child_process from 'child_process';
 import Backoff from 'backo';
 import path from 'path';
+import {path as get} from 'ramda';
 import {kill as _kill, killOnExit} from '/internal/util';
+import URL from 'url';
 import hook from '../hook';
 import {
   appProcessStarted,
@@ -21,9 +23,12 @@ const otherStuff2 = (hub: Hub, compiler: WebpackCompiler) => {
   let lastHash = null;
   let spawnTimeout = null;
 
-  if (compiler.options.output.publicPath) {
+  const devPath = get(['devServer', 'publicPath'], compiler.options);
+  const proxyPath = devPath ? URL.parse(devPath).pathname : null;
+
+  if (typeof proxyPath === 'string') {
     hub.dispatch(proxySet({
-      path: compiler.options.output.publicPath,
+      path: proxyPath,
     }));
   }
 
@@ -61,6 +66,10 @@ const otherStuff2 = (hub: Hub, compiler: WebpackCompiler) => {
       // Make sure apps don't try to steal our port.
       PORT: 0,
     };
+    // Set proxy path.
+    if (typeof proxyPath === 'string') {
+      env.WEBPACK_UDEV_PROXY_PATH = proxyPath;
+    }
     // Only support one entrypoint right now. Maybe support more later.
     if (entries.length !== 1) {
       // TODO: Report error!
@@ -101,7 +110,9 @@ const otherStuff2 = (hub: Hub, compiler: WebpackCompiler) => {
     rip = true;
   });
 
-  killOnExit(child);
+  if (child) {
+    killOnExit(child);
+  }
 
   hook(compiler, 'done', (_stats) => {
     lastHash = stats && stats.hash;

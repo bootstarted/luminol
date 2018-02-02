@@ -1,7 +1,8 @@
-/* @flow */
+// @flow
 import {
   CONFIG_LOADED,
   CONFIG_UNLOADED,
+  CONFIG_EMPTY,
 } from './types';
 
 export const configLoaded = (config: string) => ({
@@ -12,4 +13,9 @@ export const configLoaded = (config: string) => ({
 export const configUnloaded = (config: string) => ({
   type: CONFIG_UNLOADED,
   payload: {config},
+});
+
+export const configEmpty = (paths: Array<string>) => ({
+  type: CONFIG_EMPTY,
+  payload: {paths},
 });

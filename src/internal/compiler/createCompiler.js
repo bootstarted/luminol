@@ -1,4 +1,4 @@
-/* @flow */
+// @flow
 import webpack from 'webpack';
 import MemoryFileSystem from 'memory-fs';
 

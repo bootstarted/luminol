@@ -3,7 +3,7 @@
 A better [dev-server] for [webpack].
 
 ![build status](http://img.shields.io/travis/metalabdesign/webpack-udev-server/master.svg?style=flat)
-![coverage](http://img.shields.io/codecov/c/metalabdesign/webpack-udev-server/master.svg?style=flat)
+![coverage](http://img.shields.io/codecov/c/github/metalabdesign/webpack-udev-server/master.svg?style=flat)
 ![license](http://img.shields.io/npm/l/webpack-udev-server.svg?style=flat)
 ![version](http://img.shields.io/npm/v/webpack-udev-server.svg?style=flat)
 ![downloads](http://img.shields.io/npm/dm/webpack-udev-server.svg?style=flat)
@@ -40,25 +40,23 @@ webpack-udev-server --config config/*.webpack*.js
 
 ## API
 
-### watch()
+### createClient()
 
-If your server requires access to a webpack file you've generated (e.g. quite often a `stats.json`) you'll need to use `watch` – since web assets are generated in memory in development mode you won't be able to read them with traditional `fs` calls. A simple example of this scenario using `express`:
+If your server requires access to some data that's not available on the local file system you'll need to use `createClient` to connect to your `webpack-udev-server` instance – since web assets are generated in memory, (in development mode), you won't be able to read them with traditional `fs` calls. A simple example of this scenario using `express`:
 
 ```javascript
-import watch from 'webpack-udev-server/watch';
+import {createClient} from 'webpack-udev-server';
 import express from 'express';
 import fs from 'fs';
 
 const app = express();
 
 if (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) {
-  // Instead of reading stats from disk you can watch any file in your build and
-  // poll that file for stats using `watch`.
-  const watcher = watch('stats.json');
+  const devServer = createClient();
   app.use((req, res, next) => {
-    watcher.poll().then(
+    devServer.getStats('client').then(
       (stats) => {
-        req.stats = JSON.parse(stats.toString('utf8'));
+        req.stats = stats;
         next();
       },
       (err) => next(err)
@@ -72,54 +70,6 @@ if (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) {
     next();
   });
 }
-```
-
-If your app is based on [midori] instead then you can simply use [midori-webpack] which supports this functionality out of the box.
-
-### Raw Actions
-
-You can communicate with and consume `webpack-udev-server` state by using the central IPC hub. This allows you to both send and receive actions:
-
-```js
-import {createClient} from 'webpack-udev-server/hub';
-import {proxySet} from 'webpack-udev-server/action/proxy';
-import http from 'http';
-
-const hub = createClient('ws://url-to-hub');
-
-const server = http.createServer((req, res) => {
-  res.end('Hello world.');
-});
-
-server.on('listening', () => {
-  // Broadcast a new proxy when the server is listening.
-  const {port} = server.address();
-  hub.dispatch(proxySet({
-    path: '/',
-    url: `http://localhost:${port}`,
-  }));
-});
-
-server.listen(8888);
-```
-
-#### proxySet(config)
-
-Advertise that a given path should be proxied to a given URL.
-
-```js
-proxySet({
-  path: '/',
-  url: 'http://www.foo.com',
-});
-```
-
-#### pathWatched(path)
-
-Advertise that a given local file system path should be monitored for configs.
-
-```js
-pathWatched('./foo/*.webpack.config.js');
 ```
 
 ## Architecture

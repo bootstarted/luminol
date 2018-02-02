@@ -1,9 +1,12 @@
-/* @flow */
+// @flow
 export type Action = {|
   type: string,
-  payload?: any,
-  meta?: any,
-  error?: boolean,
+  payload?: mixed,
+  meta?: {
+    [string]: mixed,
+    replyTo?: string,
+    name?: string,
+  },
 |};
 
 export type Pattern = Array<string> | string;
@@ -17,8 +20,3 @@ export type Hub = {
 };
 
 export type ProvideCallback = (a: Action, p: SubscribeCallback) => void;
-
-export type Demand = {
-  demand: (input: Action, fn: SubscribeCallback) => Unsubscribe,
-  provide: (p: string, c: ProvideCallback) => Unsubscribe,
-}

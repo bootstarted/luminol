@@ -19,6 +19,7 @@
     "@babel/preset-flow"
   ],
   "plugins": [
-    ["module-resolver", {"alias": {"": "./src"}}]
+    "@babel/plugin-proposal-class-properties",
+    ["module-resolver", {"alias": {"": "./src"}}],
   ]
 }

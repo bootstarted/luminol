@@ -1,4 +1,4 @@
-/* @flow */
+// @flow
 import {unionWith, eqBy, prop} from 'ramda';
 import {combineReducers} from 'redux';
 import {PROXY_SET} from '/action/types';

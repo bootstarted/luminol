@@ -1,6 +1,10 @@
 import {expect} from 'chai';
 import createConfig from '/internal/compiler/createConfig';
 
+const plugins = (config) => {
+  return (config.plugins || []).map((x) => x.constructor.toString()).join('|');
+};
+
 describe('/internal/compiler/createConfig', () => {
   it('should throw if no `entry`', () => {
     expect(() => {
@@ -37,15 +41,13 @@ describe('/internal/compiler/createConfig', () => {
       entry: 'foo.js',
       name: 'foo',
     });
-    // TODO: Better check.
-    expect(result.plugins.length).to.equal(2);
+    expect(plugins(result)).to.contain('HotModuleReplacementPlugin');
   });
   it('should not add HMR plugin when `hot` is false', () => {
     const result = createConfig({hot: false, hubUrl: 'ws://localhost'}, {
       entry: 'foo.js',
       name: 'foo',
     });
-    // TODO: Better check.
-    expect(result.plugins.length).to.equal(1);
+    expect(plugins(result)).to.not.contain('HotModuleReplacementPlugin');
   });
 });
