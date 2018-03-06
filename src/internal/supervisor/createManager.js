@@ -1,4 +1,4 @@
-/* @flow */
+// @flow
 import {observer, observe} from 'redux-observers'; // eslint-disable-line
 import {createStore} from 'redux';
 import {difference} from 'ramda';
@@ -7,6 +7,7 @@ import createSpawner from './createSpawner';
 import reducer, {actions} from './reducer';
 
 import type {Hub} from '/types';
+import type {Spawner} from './createSpawner';
 
 const configObserver = (spawner) => observer(
   ({configs}) => configs,
@@ -23,7 +24,7 @@ const configObserver = (spawner) => observer(
 );
 
 type Options = {
-  spawner: Object,
+  spawner: Spawner,
 };
 
 /**

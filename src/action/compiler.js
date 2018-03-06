@@ -1,11 +1,9 @@
-/* @flow */
+// @flow
 import {
   WEBPACK_COMPILER_INVALID,
   WEBPACK_COMPILER_COMPILING,
   WEBPACK_STATS,
   WEBPACK_ERROR,
-  FILE_CONTENT_REQUEST,
-  FILE_CONTENT_REPLY,
   APP_PROCESS_CRASHED,
   APP_PROCESS_RESTARTED,
   APP_PROCESS_STARTED,
@@ -13,7 +11,12 @@ import {
 
 import type {WebpackStats} from '/types';
 
-export const webpackCompilerInvalid = (meta: ?Object) => ({
+// TODO: Make this better.
+type Meta = {
+  [string]: *
+};
+
+export const webpackCompilerInvalid = (meta?: Meta) => ({
   type: WEBPACK_COMPILER_INVALID,
   meta,
 });
@@ -24,7 +27,7 @@ export const webpackCompilerCompiling = () => ({
 
 export const webpackCompilerStatsGenerated = (
   stats: WebpackStats,
-  meta: Object
+  meta?: Meta
 ) => {
   return {
     type: WEBPACK_STATS,
@@ -36,22 +39,6 @@ export const webpackCompilerStatsGenerated = (
 export const webpackCompilerError = (error: Error) => ({
   type: WEBPACK_ERROR,
   payload: error,
-});
-
-export const fileContentRequest = (file: string) => ({
-  type: FILE_CONTENT_REQUEST,
-  payload: {file},
-});
-
-export const fileContentReply = (file: string, data: string) => ({
-  type: FILE_CONTENT_REPLY,
-  payload: {file, data},
-});
-
-export const fileContentError = (error: Error) => ({
-  type: FILE_CONTENT_REPLY,
-  payload: error,
-  error: true,
 });
 
 export const appProcessStarted = (file: string) => ({

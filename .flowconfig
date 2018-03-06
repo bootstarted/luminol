@@ -1,12 +1,15 @@
 [ignore]
 .*\.flow
+
 [include]
 
 [libs]
 
 [lints]
+all=error
 
 [options]
 emoji=true
+include_warnings=true
 module.name_mapper='^/\(.*\)$' -> '<PROJECT_ROOT>/src/\1'
-suppress_comment=\\(.\\|\n\\)*\\$FlowIgnore
+suppress_comment=\\(.\\|\n\\)*\\$ExpectError

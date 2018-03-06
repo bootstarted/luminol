@@ -6,10 +6,9 @@
   "repository": "izaakschroeder/webpack-udev-server",
   "main": "index.js",
   "scripts": {
-    "prepublish": "npm run clean && npm run copy && npm run build && npm run import",
+    "prepublish": "npm run clean && npm run build && npm run import && chmod +x ./bin/*.js",
     "clean": "./node_modules/.bin/rimraf lib ./*.js ./*.map ./*.flow action bin hub internal",
     "build": "./node_modules/.bin/babel --copy-files -s -d lib src",
-    "copy": "./node_modules/.bin/ncp src lib && ./node_modules/.bin/renamer --regex --find '$' --replace '.flow' 'lib/**/*.js'",
     "import": "./node_modules/.bin/ncp lib .",
     "lint": "./node_modules/.bin/eslint .",
     "smoke": "./test/smoke/demo.sh",
@@ -23,9 +22,11 @@
   "dependencies": {
     "backo": "^1.1.0",
     "chokidar": "^2.0.0",
+    "es6-error": "^4.1.1",
     "import-file": "^1.2.2",
     "memory-fs": "^0.4.1",
-    "midori": "^1.0.0",
+    "micromatch": "^3.1.9",
+    "midori": "^2.0.0",
     "mime-types": "^2.1.14",
     "open": "^0.0.5",
     "openport": "0.0.4",
@@ -35,11 +36,14 @@
     "url-join": "^2.0.2",
     "webpack-partial": "^2.2.0",
     "ws": "^4.0.0",
-    "yargs": "^10.1.1"
+    "yargs": "^10.1.2"
   },
   "devDependencies": {
     "@babel/cli": "^7.0.0-beta.37",
     "@babel/core": "^7.0.0-beta.38",
+    "@babel/plugin-proposal-class-properties": "^7.0.0-beta.40",
+    "@babel/plugin-syntax-flow": "^7.0.0-beta.39",
+    "@babel/plugin-syntax-object-rest-spread": "^7.0.0-beta.39",
     "@babel/preset-env": "^7.0.0-beta.37",
     "@babel/preset-flow": "^7.0.0-beta.37",
     "@babel/preset-react": "^7.0.0-beta.37",
@@ -53,7 +57,7 @@
     "chai-http": "^3.0.0",
     "eslint": "^4.15.0",
     "eslint-config-metalab": "^8.0.0",
-    "flow-bin": "^0.63.1",
+    "flow-bin": "^0.66.0",
     "mocha": "^4.1.0",
     "ncp": "^2.0.0",
     "node-fetch": "^1.7.3",
@@ -61,7 +65,7 @@
     "sinon": "^4.1.5",
     "sinon-chai": "^2.14.0",
     "stats-webpack-plugin": "^0.6.2",
-    "webpack": "^4.0.0-alpha.4",
+    "webpack": "^4.0.0-beta.0",
     "webpack-node-externals": "^1.6.0"
   },
   "peerDependencies": {

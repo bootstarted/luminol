@@ -1,11 +1,13 @@
-/* @flow */
+// @flow
 import createHub from './internal/createHub';
 import handleMessage from './internal/handleMessage';
-import createDemand from './internal/createDemand';
-import createNamespace from './internal/createNamespace';
 import Backoff from 'backo';
 
 import type {Pattern, Action, SubscribeCallback} from './types';
+
+type Handlers = {
+  ACTION: (a: Action) => void,
+};
 
 const createClient = (WebSocket: Class<WebSocket>) => (url: string) => {
   let ws;
@@ -13,11 +15,10 @@ const createClient = (WebSocket: Class<WebSocket>) => (url: string) => {
   const hub = createHub();
 
   const backoff = new Backoff({min: 100, max: 10000});
-  let subs = 0;
 
   let closed = false;
 
-  const handlers = {
+  const handlers: Handlers = {
     ACTION: (payload) => {
       hub.dispatch(payload);
     },
@@ -62,6 +63,7 @@ const createClient = (WebSocket: Class<WebSocket>) => (url: string) => {
 
     ws.addEventListener('message', (message) => {
       // TODO: Fix these flow refinement issues.
+      // $ExpectError
       const _message = ((message: any): MessageEvent);
       if (typeof _message.data === 'string') {
         handleMessage(handlers, _message.data);
@@ -81,7 +83,7 @@ const createClient = (WebSocket: Class<WebSocket>) => (url: string) => {
 
   const subscribe = (match: Pattern, listener: SubscribeCallback) => {
     const unsub = hub.subscribe(match, listener);
-    const id = ++subs;
+    const id = unsub.id;
     send(JSON.stringify({
       type: 'SUBSCRIBE',
       payload: {match, id},
@@ -105,10 +107,6 @@ const createClient = (WebSocket: Class<WebSocket>) => (url: string) => {
     url,
   };
 
-  const eventHub = createNamespace(remoteHub, 'event');
-  const demandHub = createNamespace(remoteHub, 'demand');
-  const demand = createDemand(demandHub);
-
   return {
     url,
     close: () => {
@@ -120,10 +118,8 @@ const createClient = (WebSocket: Class<WebSocket>) => (url: string) => {
         ws = null;
       }, 40);
     },
-    dispatch: eventHub.dispatch,
-    subscribe: eventHub.subscribe,
-    demand: demand.demand,
-    provide: demand.provide,
+    dispatch: remoteHub.dispatch,
+    subscribe: remoteHub.subscribe,
   };
 };
 

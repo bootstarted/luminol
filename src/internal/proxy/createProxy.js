@@ -1,17 +1,18 @@
-/* @flow */
+// @flow
 import {
   compose,
   proxy,
-  match,
+  use,
   next,
   pending,
   status,
   send,
+  request,
 } from 'midori';
-import {path} from 'midori/match';
+import EventEmitter from 'events';
 import url from 'url';
 
-import type {AppCreator} from 'midori/types';
+import type {App} from 'midori';
 
 type ProxyArguments = {
   target: {
@@ -20,10 +21,10 @@ type ProxyArguments = {
   },
 };
 
-type Options = {
-  onTimeout: AppCreator,
-  timeout: number,
-  proxy: ((a: ProxyArguments) => AppCreator),
+export type Options = {
+  onTimeout?: App,
+  timeout?: number,
+  proxy?: ((a: ProxyArguments) => App),
 };
 
 const defaultOnTimeout = compose(
@@ -37,14 +38,17 @@ const defaultOptions = {
   proxy,
 };
 
+type Proxy = App & {
+  update: (Array<*>) => void,
+};
+
 /**
  * Do the things. TODO: Describe this.
  * @param {Object} _options The options
  * @returns {Function} App creator.
  */
-const createProxy = (_options: ?Options): AppCreator => {
-  let proxyApp = next;
-  const watches = [];
+const createProxy = (_options: ?Options): Proxy => {
+  let proxyApp: App = next;
   const options = {
     ...defaultOptions,
     ..._options,
@@ -54,9 +58,10 @@ const createProxy = (_options: ?Options): AppCreator => {
     timeout: options.timeout,
   };
   const createProxyApp = options.proxy;
+  const events = new EventEmitter();
 
-  const createProxyHandler = (info) => {
-    if (info.url) {
+  const createProxyHandler = (info): App => {
+    if (info.ready) {
       const {hostname, port, path} = url.parse(info.url);
       if (info.path !== path) {
         // TODO: Warn.
@@ -70,7 +75,9 @@ const createProxy = (_options: ?Options): AppCreator => {
       });
     }
     return pending((fn) => {
-      watches.push({fn, path: info.path});
+      events.once(info.path, (info) => {
+        fn(createProxyHandler(info));
+      });
     }, pendingOptions);
   };
 
@@ -82,27 +89,19 @@ const createProxy = (_options: ?Options): AppCreator => {
     const parts = proxies.slice().sort((a, b) => {
       return zoop(b) - zoop(a);
     }).map((info) => {
-      return match(path(info.path), createProxyHandler(info));
+      return use(info.path, createProxyHandler(info));
     });
-    if (parts.length === 0) {
-      return;
-    }
-    proxyApp = compose(...parts);
-    watches.forEach(({fn, path}) => {
-      if (
-        !path || proxies.some((proxy) => (proxy.path === path && proxy.ready))
-      ) {
+    proxyApp = compose(...parts, pending((fn) => {
+      events.once('@app', (proxyApp) => {
         fn(proxyApp);
-      }
-    });
+      });
+    }, pendingOptions));
+    events.emit('@app', proxyApp);
   };
-  const app = pending((fn) => {
-    if (proxyApp !== next) {
-      fn(proxyApp);
-      return;
-    }
-    watches.push({fn, path: null});
-  }, pendingOptions);
+  update([]);
+  // TODO: FIXME: Make flow happy here.
+  // $ExpectError
+  const app: Proxy = request(() => proxyApp);
   app.update = update;
   return app;
 };

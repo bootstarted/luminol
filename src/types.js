@@ -1,16 +1,23 @@
-/* @flow */
+// @flow
 
 import type {
   Hub as BaseHub,
-  Demand,
 } from './hub/types';
+import {
+  readFile,
+} from 'fs';
 
 type WebpackEntry = string | {[string]: string} | [string];
 
 export type WebpackConfig = {
   name: string,
+  target: string,
   entry: WebpackEntry,
-  plugins: Array<any>,
+  plugins: Array<*>,
+};
+
+export type WebpackFileSystem = {
+  readFile: typeof readFile,
 };
 
 export type WebpackCompiler = {
@@ -21,10 +28,10 @@ export type WebpackCompiler = {
     },
   },
   outputPath: string,
-  outputFileSystem: Object,
-  plugin?: (evt: string, fn: Function) => void,
+  outputFileSystem: WebpackFileSystem,
+  plugin?: (evt: string, fn: (*) => void) => void,
   hooks?: {[string]: {
-    tap: (name: string, fn: Function) => void,
+    tap: (name: string, fn: (*) => void) => void,
   }}
 };
 
@@ -35,11 +42,26 @@ export type WebpackConfigInput = Array<WebpackConfig | string>
 
 export type WebpackConfigs = Array<WebpackConfig> | WebpackConfig;
 
+export type Asset = {
+  name: string,
+  chunkName: string,
+};
+
+export type Chunk = {
+  name: string,
+};
+
 export type WebpackStats = {
-  assets: Object,
+  assets: Array<Asset>,
+  chunks: Array<Chunk>,
+  hash: string,
+  publicPath: string,
+  errors: Array<mixed>,
+  modules: {[string]: {name: string}},
   hash: string,
 };
 
-export type Hub = BaseHub & Demand & {
+export type Hub = BaseHub & {
   url: string,
+  close: () => void,
 };

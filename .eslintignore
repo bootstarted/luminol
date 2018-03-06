@@ -6,3 +6,4 @@ action/**/*
 bin/**/*
 /*.js
 **/dist/**
+/flow-typed/**/*

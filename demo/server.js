@@ -1,14 +1,10 @@
 const midori = require('midori');
-const createFileWatcher = require('../createFileWatcher').default;
-const path = require('path');
+const createClient = require('../createClient').default;
 const urlJoin = require('url-join');
 
-const watcher = createFileWatcher(
-  path.resolve(path.join('demo', 'dist', 'client', 'stats.json'))
-);
+const udev = createClient();
 
-const getScripts = (statsData) => {
-  const stats = JSON.parse(statsData.toString('utf8'));
+const getScripts = (stats) => {
   const main = !Array.isArray(stats.assetsByChunkName.main) ?
     [stats.assetsByChunkName.main] : stats.assetsByChunkName.main;
   const entries = main.map((path) => urlJoin(stats.publicPath, path));
@@ -17,8 +13,8 @@ const getScripts = (statsData) => {
   }).join('\n');
 };
 
-const createApp = midori.request(function() {
-  return watcher.poll().then((stats) => {
+const app = midori.request(function() {
+  return udev.getStats('client').then((stats) => {
     return midori.compose(
       midori.header('Content-Type', 'text/html; charset=utf-8'),
       midori.send(`
@@ -34,7 +30,6 @@ const createApp = midori.request(function() {
   });
 });
 
-const app = createApp();
-app.listen(process.env.PORT, () => {
+midori.listen(app, process.env.PORT, () => {
   console.log('Demo app listening.');
 });

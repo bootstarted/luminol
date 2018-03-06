@@ -1,4 +1,4 @@
-/* @flow */
+// @flow
 import {spawn} from 'child_process';
 import {join} from 'path';
 import {killOnExit, kill} from '/internal/util';
@@ -8,6 +8,11 @@ const defaultExe = join(__dirname, '..', '..', 'bin', 'webpack-udev-server.js');
 type Options = {
   hubUrl: string,
   exe?: string,
+};
+
+export type Spawner = {
+  unload: (config: string) => void,
+  load: (config: string) => void,
 };
 
 /**
@@ -21,7 +26,7 @@ type Options = {
 const createSpawner = ({
   hubUrl,
   exe = defaultExe,
-}: Options) => {
+}: Options): Spawner => {
   if (!hubUrl) {
     throw new TypeError('Must provide valid `hubUrl`.');
   }
@@ -47,7 +52,6 @@ const createSpawner = ({
       env: process.env,
     });
     killOnExit(compiler);
-    return compiler;
   };
 
   return {load, unload};

@@ -1,4 +1,4 @@
-/* @flow */
+// @flow
 import type {
   Hub,
   Action,
@@ -13,13 +13,10 @@ const normalizeMatch = (match: string) => {
       return type === match;
     };
   }
-  throw new TypeError();
+  throw new TypeError('Invalid match pattern.');
 };
 
 export const createMatch = (matches: Pattern) => {
-  if (typeof matches === 'function') {
-    return matches;
-  }
   if (!Array.isArray(matches)) {
     return normalizeMatch(matches);
   }
@@ -35,7 +32,11 @@ const createHub = (): Hub => {
       const match = pattern ? createMatch(pattern) : (_) => true;
       const id = ++ids;
       listeners.push({id, listener, match});
-      return () => {
+      this.dispatch({
+        type: '@@hub/subscribe',
+        payload: {id, pattern},
+      });
+      const unsub = () => {
         for (let i = 0; i < listeners.length; ++i) {
           if (listeners[i].id === id) {
             listeners.splice(i, 1);
@@ -43,11 +44,19 @@ const createHub = (): Hub => {
           }
         }
       };
+      unsub.id = id;
+      return unsub;
     },
     dispatch(action: Action) {
-      listeners.forEach(({match, listener}) => {
+      listeners.forEach(({match, listener, id}) => {
         if (match(action)) {
-          listener(action);
+          if (
+            !action.meta ||
+            (typeof action.meta.replyTo === 'undefined') ||
+            action.meta.replyTo === id
+          ) {
+            listener(action);
+          }
         }
       });
     },

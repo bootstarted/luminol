@@ -1,3 +1,4 @@
+// @flow
 const resolve = (entry) => require.resolve(entry);
 
 const runtimes = {
@@ -6,7 +7,13 @@ const runtimes = {
   webworker: resolve('./internal/runtime/web'),
 };
 
-export default ({name, target, hub}) => {
+type Options = {
+  name: string,
+  target: string,
+  hub: string,
+};
+
+export default ({name, target, hub}: Options) => {
   if (!hub) {
     throw new TypeError('Must give valid `hub` url.');
   }

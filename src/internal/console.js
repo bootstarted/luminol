@@ -1,4 +1,4 @@
-/* @flow */
+// @flow
 import type {Hub} from '/types';
 
 import {basename} from 'path';
@@ -7,6 +7,7 @@ import {
   PROXY_SET,
   CONFIG_LOADED,
   CONFIG_UNLOADED,
+  CONFIG_EMPTY,
   PATH_WATCHED,
   PATH_UNWATCHED,
   WEBPACK_STATS,
@@ -23,6 +24,11 @@ const handlers = {
   },
   [CONFIG_LOADED]: ({config}) => {
     console.log('🚀  Launching compiler for', basename(config));
+  },
+  [CONFIG_EMPTY]: ({paths}) => {
+    const str = paths.map((path) => `   🚫  ${path}`).join('\n');
+    console.log('⚠️  No configuration files found matching given paths:');
+    console.log(str);
   },
   [CONFIG_UNLOADED]: ({config}) => {
     console.log('☠️  Killing compiler for', basename(config));

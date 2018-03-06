@@ -1,4 +1,4 @@
-/* @flow */
+// @flow
 import openport from 'openport';
 import http from 'http';
 

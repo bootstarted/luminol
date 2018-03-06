@@ -1,10 +1,7 @@
-/* @flow */
-type Handlers = {
-  [string]: (a: any, b: any) => void,
-};
+// @flow
 
-const handleMessage = (
-  handlers: Handlers,
+const handleMessage = <T: {[string]: (p: *, m?: *) => void}>(
+  handlers: T,
   data: string
 ): boolean => {
   try {

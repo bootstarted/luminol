@@ -1,4 +1,4 @@
-/* @flow */
+// @flow
 import {lookup} from 'mime-types';
 import {
   compose,
@@ -12,7 +12,7 @@ import {
 import readFileFromCompiler from '../readFileFromCompiler';
 
 import type {WebpackCompiler} from '/types';
-import type {AppCreator} from 'midori/types';
+import type {App} from 'midori';
 
 const contentType = (f) => {
   if (/\.js$/.test(f)) {
@@ -24,9 +24,9 @@ const contentType = (f) => {
 /**
  * Create a midori app that serves stuff from a webpack compiler.
  * @param {WebpackCompiler} compiler The compiler.
- * @returns {AppCreator} Midori app creator.
+ * @returns {App} Midori app.
  */
-const serveCompilerOutput = (compiler: WebpackCompiler): AppCreator => {
+const serveCompilerOutput = (compiler: WebpackCompiler): App => {
   // publicPath should end in `/` but just in case it doesn't...
   const publicPath = compiler.options.output.publicPath;
   const length = publicPath.charAt(publicPath.length - 1) !== '/' ?

@@ -1,4 +1,4 @@
-/* @flow */
+// @flow
 import {
   PATH_WATCHED,
   PATH_UNWATCHED,

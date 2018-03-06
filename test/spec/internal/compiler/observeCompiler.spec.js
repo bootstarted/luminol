@@ -14,7 +14,7 @@ describe('/internal/compiler/observeCompiler', () => {
     });
     const ipc = {
       dispatch: spy,
-      provide: () => {},
+      subscribe: () => {},
     };
     observeCompiler(ipc, compiler);
     const promise = new Promise((resolve, reject) => {

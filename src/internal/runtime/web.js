@@ -1,4 +1,4 @@
-/* @flow */
+// @flow
 import {createClient} from '/hub';
 import createRuntime from './createRuntime';
 import {parseResourceQuery} from './util';

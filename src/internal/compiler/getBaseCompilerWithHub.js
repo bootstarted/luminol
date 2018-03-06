@@ -1,14 +1,17 @@
-/* @flow */
+// @flow
 import hook from './hook';
+// import symbol from './symbol';
 import type {Hub, WebpackCompiler} from '/types';
-import type {Action} from '/hub/types';
+import type {
+  Action,
+} from '/hub/types';
 
 type Callback = (hub: Hub, compiler: WebpackCompiler) => void;
 
 const wrap = (baseHub: Hub, compiler: WebpackCompiler, fn: Callback) => {
   return (compiler: WebpackCompiler) => {
     const name = compiler.options && compiler.options.name;
-    if (!name) {
+    if (typeof name !== 'string' || name.length <= 0) {
       throw new TypeError('Must provide named webpack configuration.');
     }
     const hub: Hub = {
@@ -27,6 +30,10 @@ const wrap = (baseHub: Hub, compiler: WebpackCompiler, fn: Callback) => {
         return baseHub.dispatch(newAction);
       },
     };
+    // compiler[symbol] = hub;
+    // hook(compiler, 'this-compilation', (compilation) => {
+    //   compilation[symbol] = hub;
+    // });
     fn(hub, compiler);
   };
 };

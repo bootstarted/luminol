@@ -1,3 +1,4 @@
+// @flow
 import {
   APP_UPDATE_CHECK_FAILED,
   APP_UPDATE_APPLIED,
@@ -7,6 +8,8 @@ import {
   APP_UPDATE_STARTED,
   APP_MODULES_UNACCEPTED,
 } from '/action/types';
+
+import type {Hub} from '/hub/types';
 
 const handlers = {
   [APP_ERRORS_DETECTED]: () => {
@@ -41,7 +44,7 @@ const handlers = {
   },
 };
 
-export default (ipc) => {
+export default (ipc: Hub) => {
   ipc.subscribe(Object.keys(handlers), ({type, payload, meta}) => {
     handlers[type](payload, meta);
   });

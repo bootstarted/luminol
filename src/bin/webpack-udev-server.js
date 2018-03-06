@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* @flow */
+// @flow
 import open from 'open';
 import yargs from 'yargs';
 
