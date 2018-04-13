@@ -1,18 +1,10 @@
 {
-  "env": {
-    "test": {
-      "plugins": [
-        ["babel-plugin-transform-adana", {
-          "only": "src/**/*.js"
-        }]
-      ]
-    }
-  },
   "presets": [
     ["@babel/preset-env", {
       "targets": {
-        "node": 4
+        "node": "8"
       },
+      "modules": "commonjs",
       "shippedProposals": true
     }],
     "@babel/preset-react",
@@ -20,6 +12,9 @@
   ],
   "plugins": [
     "@babel/plugin-proposal-class-properties",
-    ["module-resolver", {"alias": {"": "./src"}}],
+    "babel-plugin-graphql-tag",
+    ["module-resolver", {
+      "alias": {"": "./src", "#test": "./test"},
+    }],
   ]
 }

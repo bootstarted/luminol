@@ -9,3 +9,8 @@ env:
   node: true
 globals:
   require: true
+overrides:
+  -
+    files: "*.test.js"
+    env:
+      jest: true
