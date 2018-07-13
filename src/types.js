@@ -1,11 +1,6 @@
 // @flow
-
-import type {
-  Hub as BaseHub,
-} from './hub/types';
-import {
-  readFile,
-} from 'fs';
+import {readFile} from 'fs';
+import type ApolloClient from 'apollo-client';
 
 type WebpackEntry = string | {[string]: string} | [string];
 
@@ -14,31 +9,42 @@ export type WebpackConfig = {
   target: string,
   entry: WebpackEntry,
   plugins: Array<*>,
+  output: {
+    publicPath: string,
+  },
+  devServer: {[string]: mixed},
 };
 
 export type WebpackFileSystem = {
   readFile: typeof readFile,
 };
 
-export type WebpackCompiler = {
-  options: {
-    name: ?string,
-    output: {
-      publicPath: string,
+export type WebpackMultiCompiler = {
+  compilers: Array<WebpackCompiler>,
+  plugin: (evt: string, fn: (*) => void) => void,
+  hooks: {
+    [string]: {
+      tap: (name: string, fn: (*) => void) => void,
     },
   },
-  outputPath: string,
-  outputFileSystem: WebpackFileSystem,
-  plugin?: (evt: string, fn: (*) => void) => void,
-  hooks?: {[string]: {
-    tap: (name: string, fn: (*) => void) => void,
-  }}
 };
 
-export type WebpackConfigInput = Array<WebpackConfig | string>
+export type WebpackCompiler = {
+  options: WebpackConfig,
+  outputPath: string,
+  outputFileSystem: WebpackFileSystem,
+  plugin: (evt: string, fn: (*) => void) => void,
+  hooks: {
+    [string]: {
+      tap: (name: string, fn: (*) => void) => void,
+    },
+  },
+};
+
+export type WebpackConfigInput =
+  | Array<WebpackConfig | string>
   | WebpackConfig
-  | string
-;
+  | string;
 
 export type WebpackConfigs = Array<WebpackConfig> | WebpackConfig;
 
@@ -51,6 +57,11 @@ export type Chunk = {
   name: string,
 };
 
+export type Meta = {
+  name: string,
+  pid: number,
+};
+
 export type WebpackStats = {
   assets: Array<Asset>,
   chunks: Array<Chunk>,
@@ -61,7 +72,20 @@ export type WebpackStats = {
   hash: string,
 };
 
-export type Hub = BaseHub & {
+export type WebProxy = {
+  path: string,
   url: string,
-  close: () => void,
 };
+
+export type Config = {
+  id: string,
+  path: string,
+};
+
+export interface Spawner<T> {
+  unload: (T) => void;
+  load: (config: Config) => T;
+}
+
+// TODO: Determine cache shape
+export type Client = ApolloClient<*>;
