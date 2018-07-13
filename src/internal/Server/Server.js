@@ -110,6 +110,7 @@ class Server {
   base: ?HTTPServer = null;
   q: Array<() => void> = [];
   options: Options;
+  apiPrefix = '/__meta__/graphql';
 
   context = new Context();
   websocketServer = new WebSocketServer({
@@ -163,7 +164,8 @@ class Server {
       item(base);
     });
     this.q = [];
-    this.url = `http://localhost:${base.address().port}`;
+    this.url = `http://localhost:${base.address().port}${this.apiPrefix}`;
+    debug(`Using server ${this.url}`);
     let baseApp = next;
     if (typeof this.options.url === 'string') {
       this.client = createClient(this.options.url);
@@ -171,7 +173,7 @@ class Server {
       this.client = createClient(this.url);
       baseApp = compose(
         use(
-          '/__webpack_udev_graphql__',
+          this.apiPrefix,
           compose(
             handleCors,
             request(async (req) => {

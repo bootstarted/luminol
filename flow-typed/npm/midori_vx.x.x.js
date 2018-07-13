@@ -2,7 +2,12 @@
 // flow-typed version: <<STUB>>/midori_v1.0.0/flow_v0.64.0
 
 declare module 'midori' {
-  import type {Server, ClientRequest, IncomingMessage, ServerResponse} from 'http';
+  import type {
+    Server,
+    ClientRequest,
+    IncomingMessage,
+    ServerResponse,
+  } from 'http';
   import type {Socket} from 'net';
 
   declare export type ServeOptions = {
@@ -58,7 +63,7 @@ declare module 'midori' {
   declare type AsyncApp = App | Promise<App>;
   declare type AppFunction<T> = ((T) => AsyncApp) => App;
   declare export type Headers = {
-    [string]: string | Array<string>
+    [string]: string | Array<string>,
   };
   declare export type Query = {
     [string]: mixed,
@@ -86,7 +91,11 @@ declare module 'midori' {
   declare export var url: AppFunction<URL>;
   declare export var body: AppFunction<Buffer | string>;
   declare export var response: AppFunction<ServerResponse>;
-  declare export var upgrade: AppFunction<{req: IncomingMessage, socket: Socket, head: Buffer}>;
+  declare export var upgrade: AppFunction<{
+    req: IncomingMessage,
+    socket: Socket,
+    head: Buffer,
+  }>;
   declare export var query: AppFunction<Query>;
   declare export var pure: (*) => App;
 
@@ -94,10 +103,13 @@ declare module 'midori' {
     fn: (err: Error, req: IncomingMessage, res: ServerResponse) => AsyncApp,
   ): App;
 
-  declare export function pending(fn: ((App) => void) => ?Disposer, options?: {
-    timeout: number,
-    onTimeout: App,
-  }): App;
+  declare export function pending(
+    fn: ((App) => void) => ?Disposer,
+    options?: {
+      timeout: number,
+      onTimeout: App,
+    },
+  ): App;
 
   declare export function send(string | Buffer): App;
   declare export function send(number, string | Buffer): App;
@@ -138,7 +150,6 @@ declare module 'midori' {
   };
   declare export var apply: Apply;
 
-
   declare type CreateSelector = {
     <R>(() => R): AppFunction<R>,
     <R, V1>(AppFunction<V1>, (V1) => Promise<R> | R): AppFunction<R>,
@@ -160,9 +171,9 @@ declare module 'midori' {
 declare module 'midori/test' {
   import type {App, Headers} from 'midori';
   declare class SyntheticResult {
-    statusCode: number,
+    statusCode: number;
     headers: Headers;
-    body: ?string,
+    body: ?string;
   }
   declare export function fetch(
     App,
@@ -180,4 +191,5 @@ declare module 'midori/match' {
   import type {Matcher} from 'midori';
   declare export function host(string): Matcher;
   declare export function header(string, string): Matcher;
+  declare export function method(string): Matcher;
 }

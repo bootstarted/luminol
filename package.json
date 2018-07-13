@@ -48,7 +48,6 @@
     "react-dom": "^16.4.1",
     "resolve": "^1.8.1",
     "subscriptions-transport-ws": "^0.9.12",
-    "url-join": "^2.0.2",
     "ws": "^4.0.0",
     "yargs": "^10.1.2"
   },

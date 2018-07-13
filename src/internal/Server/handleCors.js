@@ -1,9 +1,10 @@
 import {compose, header, send, match} from 'midori';
+import {method} from 'midori/match';
 
 export default compose(
   header('Access-Control-Allow-Origin', '*'),
   match(
-    match.method('OPTIONS'),
+    method('OPTIONS'),
     send(
       204,
       {
