@@ -110,7 +110,7 @@ class Server {
   base: ?HTTPServer = null;
   q: Array<() => void> = [];
   options: Options;
-  apiPrefix = '/__meta__/graphql';
+  apiPrefix = '/__luminol__/graphql';
 
   context = new Context();
   websocketServer = new WebSocketServer({

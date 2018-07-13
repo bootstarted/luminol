@@ -2,7 +2,7 @@
 import baseDebug from 'debug';
 
 const createDebug = (namespace: string) => {
-  return baseDebug(`meta-serve:${namespace}`);
+  return baseDebug(`luminol:${namespace}`);
 };
 
 export default createDebug;

@@ -1,9 +1,9 @@
 {
-  "name": "meta-serve",
+  "name": "luminol",
   "version": "1.0.0-alpha.1",
   "author": "Izaak Schroeder <izaak.schroeder@gmail.com>",
   "license": "CC0-1.0",
-  "repository": "metalabdesign/meta-serve",
+  "repository": "metalabdesign/luminol",
   "scripts": {
     "prepublish": "npm run clean && npm run build && npm run import && chmod +x ./bin/*.js",
     "clean": "./node_modules/.bin/rimraf lib ./*.js ./*.map ./*.flow bin runtime internal",
@@ -16,7 +16,7 @@
     "test": "npm run test:lint && npm run test:spec && npm run test:smoke"
   },
   "bin": {
-    "meta-serve": "bin/meta-serve.js"
+    "luminol": "bin/luminol.js"
   },
   "dependencies": {
     "apollo-cache-inmemory": "^1.2.5",

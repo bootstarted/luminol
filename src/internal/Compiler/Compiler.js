@@ -40,7 +40,7 @@ class Compiler {
   runConfig(config: string) {
     const {path, type} = this._parseConfig(config);
     debug(`Loading handler for ${type} config`);
-    const handler = this._loadModule(`meta-serve-${type}`);
+    const handler = this._loadModule(`luminol-${type}`);
     const resolved = resolve.sync(path, {
       basedir: process.cwd(),
     });

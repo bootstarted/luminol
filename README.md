@@ -1,12 +1,12 @@
-# meta-serve
+# luminol
 
 A better dev server.
 
-![build status](http://img.shields.io/travis/metalabdesign/meta-serve/master.svg?style=flat)
-![coverage](http://img.shields.io/codecov/c/github/metalabdesign/meta-serve/master.svg?style=flat)
-![license](http://img.shields.io/npm/l/meta-serve.svg?style=flat)
-![version](http://img.shields.io/npm/v/meta-serve.svg?style=flat)
-![downloads](http://img.shields.io/npm/dm/meta-serve.svg?style=flat)
+![build status](http://img.shields.io/travis/metalabdesign/luminol/master.svg?style=flat)
+![coverage](http://img.shields.io/codecov/c/github/metalabdesign/luminol/master.svg?style=flat)
+![license](http://img.shields.io/npm/l/luminol.svg?style=flat)
+![version](http://img.shields.io/npm/v/luminol.svg?style=flat)
+![downloads](http://img.shields.io/npm/dm/luminol.svg?style=flat)
 
 Features:
  * Run server-side node applications in development mode.
@@ -21,7 +21,7 @@ Features:
 
 ```sh
 #!/bin/sh
-meta-serve -c client.webpack.config.js -c server.webpack.config.js
+luminol -c client.webpack.config.js -c server.webpack.config.js
 ```
 
 ## API
@@ -29,7 +29,7 @@ meta-serve -c client.webpack.config.js -c server.webpack.config.js
 ### createServer()
 
 ```javascript
-import {createServer} from 'meta-serve';
+import {createServer} from 'luminol';
 import {compose, get, send} from 'midori';
 
 const server = createServer({
