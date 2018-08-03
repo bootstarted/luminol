@@ -130,6 +130,7 @@ class ManagedProcess {
     const debug = this.debug;
     const processId = this.config.id;
     const env = {
+      LUMINOL_PROCESS_ID: processId,
       ...process.env,
     };
     (this.config.env || []).forEach(({key, value}) => {

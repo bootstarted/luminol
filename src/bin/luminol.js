@@ -134,7 +134,6 @@ yargs
       });
       if (argv.ui) {
         server.on('listening', () => {
-          console.log('LISTEN');
           createUi(server.client);
         });
       }

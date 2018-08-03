@@ -109,6 +109,12 @@ const resolvers = {
       if (!proc) {
         return false;
       }
+      context.proxies.forEach((proxy) => {
+        if (proxy.processId === processId) {
+          proxy.url = null;
+          pubsub.publish('proxyRegistered', {proxyRegistered: proxy});
+        }
+      });
       if (code !== 0 || error) {
         proc.status = 'ERROR';
       } else {
@@ -127,7 +133,7 @@ const resolvers = {
       proc.logs.push({buffer});
       return true;
     },
-    registerProxy(_, {url, path, tags, appId, compilerId}, context) {
+    registerProxy(_, {url, path, tags, appId, compilerId, processId}, context) {
       const proxy = {
         id: cuid(),
         url,
@@ -135,6 +141,7 @@ const resolvers = {
         tags,
         appId,
         compilerId,
+        processId,
         createdAt: Date.now(),
       };
       context.proxies.push(proxy);

@@ -108,7 +108,7 @@ const typeDefs = gql`
       time: Float
     ): Boolean
 
-    registerApp(appId: ID, compilerId: ID): Boolean
+    registerApp(appId: ID, compilerId: ID, processId: ID): Boolean
     unregisterApp(appId: ID!): Boolean
     notifyAppUpdateStatus(appId: ID!, status: AppUpdateStatus!): Boolean
     notifyAppUpdateModulesUnaccepted(appId: ID!, modules: [String]): Boolean
@@ -142,6 +142,7 @@ const typeDefs = gql`
       tags: [String]
       appId: ID
       compilerId: ID
+      processId: ID
     ): Proxy
     updateProxy(id: ID!, url: String): Boolean
     unregisterProxy(id: ID!): Boolean
