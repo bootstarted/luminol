@@ -27,6 +27,9 @@ class Context {
     if (index >= 0) {
       this.apps.splice(index, 1);
     }
+    this.proxies = this.proxies.filter((proxy) => {
+      return proxy.appId !== appId;
+    });
   }
 
   processRequest(req) {

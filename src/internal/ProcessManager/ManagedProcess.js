@@ -65,7 +65,8 @@ class ManagedProcess {
     process.once('beforeExit', this._close);
     process.once('exit', this._close);
     this._trySpawn();
-    this._pollUsage();
+    // FIXME: Re-enable this eventually
+    // this._pollUsage();
   }
 
   _pollUsage() {
@@ -129,6 +130,7 @@ class ManagedProcess {
     const debug = this.debug;
     const processId = this.config.id;
     const env = {
+      LUMINOL_PROCESS_ID: processId,
       ...process.env,
     };
     (this.config.env || []).forEach(({key, value}) => {
