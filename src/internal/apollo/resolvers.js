@@ -49,7 +49,6 @@ const resolvers = {
     },
     unregisterApp(_, params, context) {
       context.unregisterApp(params);
-      // FIXME: Remove all proxies matching app
       return true;
     },
     notifyAppUpdateStatus(_, params, context) {
