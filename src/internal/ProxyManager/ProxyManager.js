@@ -11,7 +11,7 @@ import type {Client} from '/types';
 type Proxy = {
   path: string,
   url: string,
-  createdAt: number,
+  createdAt: Date,
 };
 
 export type Options = {
@@ -152,7 +152,7 @@ class ProxyManager {
       .sort((a, b) => {
         const x = this._getPathPriority(b) - this._getPathPriority(a);
         if (x === 0) {
-          return b.createdAt - a.createdAt;
+          return b.createdAt.getTime() - a.createdAt.getTime();
         }
         return x;
       })

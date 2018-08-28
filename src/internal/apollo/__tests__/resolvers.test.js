@@ -1,6 +1,38 @@
+import {Kind} from 'graphql/language';
 import resolvers from '/internal/apollo/resolvers';
 
 describe('resolvers', () => {
+  describe('.DateTime', () => {
+    it('should fail on serializing invalid values', () => {
+      expect(() => {
+        resolvers.DateTime.serialize({f: 3});
+      }).toThrow(Error);
+    });
+    it('should fail on serializing invalid dates', () => {
+      expect(() => {
+        resolvers.DateTime.serialize('');
+      }).toThrow(Error);
+    });
+    it('should fail on parsing invalid values', () => {
+      expect(() => {
+        resolvers.DateTime.parseValue({f: 3});
+      }).toThrow(Error);
+    });
+    it('should serialize', () => {
+      expect(resolvers.DateTime.serialize(new Date('2018-01-01')));
+    });
+    it('should parseValue', () => {
+      expect(resolvers.DateTime.parseValue('2018-01-01'));
+    });
+    it('should parseLiteral', () => {
+      expect(
+        resolvers.DateTime.parseLiteral({
+          kind: Kind.STRING,
+          value: '2018-01-01',
+        }),
+      );
+    });
+  });
   describe('.Query', () => {
     describe('.requests', () => {
       it('should work', async () => {

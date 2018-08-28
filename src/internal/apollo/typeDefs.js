@@ -1,6 +1,8 @@
 import gql from 'graphql-tag';
 
 const typeDefs = gql`
+  scalar DateTime
+
   enum CompilerStatus {
     COMPILING
     PENDING
@@ -74,7 +76,7 @@ const typeDefs = gql`
     url: String
     enabled: Boolean
     tags: [String]
-    createdAt: Int
+    createdAt: DateTime
   }
 
   type Request {

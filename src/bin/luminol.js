@@ -9,6 +9,11 @@ import Compiler from '/internal/Compiler';
 
 import createUi from '/internal/ui';
 
+process.on('unhandledRejection', (err) => {
+  console.error(err);
+  process.exit(1);
+});
+
 yargs
   .option('url', {
     description: 'Server url',
