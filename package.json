@@ -43,7 +43,7 @@
     "pidusage": "2.0.16",
     "ramda": "0.25.0",
     "react": "16.4.1",
-    "react-apollo": "2.1.9",
+    "react-apollo": "2.1.11",
     "react-blessed": "0.2.1",
     "react-dom": "16.4.1",
     "resolve": "1.8.1",
