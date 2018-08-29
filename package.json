@@ -47,7 +47,7 @@
     "react-blessed": "0.2.1",
     "react-dom": "16.4.1",
     "resolve": "1.8.1",
-    "subscriptions-transport-ws": "0.9.12",
+    "subscriptions-transport-ws": "0.9.14",
     "ws": "4.1.0",
     "yargs": "10.1.2"
   },
