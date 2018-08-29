@@ -68,7 +68,7 @@
     "babel-plugin-module-resolver": "3.1.1",
     "bl": "2.0.1",
     "eslint": "5.4.0",
-    "eslint-config-metalab": "9.0.1",
+    "eslint-config-metalab": "10.0.0",
     "flow-bin": "0.79.1",
     "graphql-tag": "2.9.2",
     "jest": "23.5.0",
