@@ -37,7 +37,7 @@
     "graphql-tools": "3.0.5",
     "memory-fs": "0.4.1",
     "midori": "3.2.2",
-    "mime-types": "2.1.18",
+    "mime-types": "2.1.20",
     "openport": "0.0.5",
     "opn": "5.3.0",
     "pidusage": "2.0.13",
