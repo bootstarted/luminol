@@ -106,12 +106,12 @@ describe('ProxyManager', () => {
     });
     manager.update([
       {
-        createdAt: 1,
+        createdAt: new Date(Date.now() + 0),
         path: '/',
         url: 'http://sooner:0',
       },
       {
-        createdAt: 2,
+        createdAt: new Date(Date.now() + 2),
         path: '/',
         url: 'http://later:0',
       },

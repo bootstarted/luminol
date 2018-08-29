@@ -1,5 +1,8 @@
 import cuid from 'cuid';
 import {PubSub, withFilter} from 'graphql-subscriptions';
+import invariant from 'invariant';
+import {GraphQLScalarType} from 'graphql';
+import {Kind} from 'graphql/language';
 
 const pubsub = new PubSub();
 
@@ -9,6 +12,42 @@ const encodings = {
 };
 
 const resolvers = {
+  DateTime: new GraphQLScalarType({
+    name: 'DateTime',
+    description: '8601 timestamp scalar',
+    parseValue(value) {
+      invariant(
+        typeof value === 'string' || typeof value === 'number',
+        'invalid date',
+      );
+      const date = new Date(value);
+      invariant(!Number.isNaN(date.getTime()), 'invalid date');
+      return date;
+    },
+    serialize(value) {
+      invariant(
+        value instanceof Date ||
+          typeof value === 'string' ||
+          typeof value === 'number',
+        'invalid date',
+      );
+      if (value instanceof Date) {
+        invariant(!Number.isNaN(value.getTime()), 'invalid date');
+        return value.toISOString();
+      }
+      const date = new Date(value);
+      invariant(!Number.isNaN(date.getTime()), 'invalid date');
+      return date.toISOString();
+    },
+    parseLiteral(ast) {
+      if (ast.kind === Kind.INT || ast.kind === Kind.STRING) {
+        const date = new Date(ast.value);
+        invariant(!Number.isNaN(date.getTime()), 'invalid date');
+        return date;
+      }
+      return null;
+    },
+  }),
   Proxy: {
     enabled: (proxy, _params, _context) => {
       return !!proxy.url;
@@ -71,17 +110,23 @@ const resolvers = {
       pubsub.publish('requestProcessed', {requestProcessed: req});
       return true;
     },
-    registerProcess(_, {path, title, args, env}, context) {
-      const proc = {
-        path,
-        title,
-        args,
-        env,
-        logs: [],
-        id: cuid(),
-      };
+    registerProcess(_, params, context) {
+      const proc = params.processId
+        ? context.processes.find(({id}) => id === params.processId)
+        : {
+            id: cuid(),
+            logs: [],
+          };
+      if (!proc) {
+        return null;
+      }
+      ['path', 'title', 'args', 'env'].forEach((key) => {
+        proc[key] = params[key];
+      });
       pubsub.publish('processRegistered', {processRegistered: proc});
-      context.processes.push(proc);
+      if (!params.processId) {
+        context.processes.push(proc);
+      }
       return proc;
     },
     processUsage(_, {processId, cpu, memory}, context) {
@@ -142,7 +187,7 @@ const resolvers = {
         appId,
         compilerId,
         processId,
-        createdAt: Date.now(),
+        createdAt: new Date().toISOString(),
       };
       context.proxies.push(proxy);
       pubsub.publish('proxyRegistered', {proxyRegistered: proxy});
