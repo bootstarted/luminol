@@ -40,7 +40,7 @@
     "mime-types": "2.1.20",
     "openport": "0.0.5",
     "opn": "5.3.0",
-    "pidusage": "2.0.13",
+    "pidusage": "2.0.16",
     "ramda": "0.25.0",
     "react": "16.4.1",
     "react-apollo": "2.1.9",
