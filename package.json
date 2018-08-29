@@ -48,7 +48,7 @@
     "react-dom": "16.4.2",
     "resolve": "1.8.1",
     "subscriptions-transport-ws": "0.9.14",
-    "ws": "4.1.0",
+    "ws": "6.0.0",
     "yargs": "10.1.2"
   },
   "devDependencies": {
