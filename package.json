@@ -19,8 +19,8 @@
     "luminol": "bin/luminol.js"
   },
   "dependencies": {
-    "apollo-cache-inmemory": "1.2.9",
-    "apollo-client": "2.4.1",
+    "apollo-cache-inmemory": "1.2.10",
+    "apollo-client": "2.4.2",
     "apollo-link-ws": "1.0.8",
     "apollo-server-core": "2.0.4",
     "backo2": "1.0.2",
