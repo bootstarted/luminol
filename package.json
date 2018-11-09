@@ -69,7 +69,7 @@
     "bl": "2.0.1",
     "eslint": "5.5.0",
     "eslint-config-metalab": "10.0.0",
-    "flow-bin": "0.80.0",
+    "flow-bin": "0.86.0",
     "graphql-tag": "2.9.2",
     "jest": "23.5.0",
     "ncp": "2.0.0",
