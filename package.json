@@ -22,7 +22,7 @@
     "apollo-cache-inmemory": "1.2.9",
     "apollo-client": "2.4.1",
     "apollo-link-ws": "1.0.8",
-    "apollo-server-core": "2.0.4",
+    "apollo-server-core": "2.2.2",
     "backo2": "1.0.2",
     "blessed": "0.1.81",
     "bytes": "3.0.0",
