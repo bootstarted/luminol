@@ -162,4 +162,40 @@ describe('ProxyManager', () => {
     const {body} = await promise;
     expect(body).toBe('hello');
   });
+  it('should overwrite same paths', async () => {
+    const client = createClient();
+    let listener;
+    let updater;
+    let state = {proxies: []};
+    client.watchQuery = () => {
+      return {
+        subscribeToMore: (conf) => {
+          listener = conf;
+        },
+        subscribe: (obs) => {
+          updater = obs.next;
+        },
+      };
+    };
+    const proxyRegistered = (proxy) => {
+      state = listener.updateQuery(state, {
+        subscriptionData: {
+          data: {
+            proxyRegistered: proxy,
+          },
+        },
+      });
+      updater({data: state});
+    };
+    const manager = new ProxyManager(client, {
+      proxy: ({target: {host}}) => {
+        return send(200, host);
+      },
+    });
+    proxyRegistered({path: '/test', url: 'http://foo', createdAt: new Date()});
+    proxyRegistered({path: '/test', url: 'http://bar', createdAt: new Date()});
+    proxyRegistered({path: '/baz', url: 'http://baz', createdAt: new Date()});
+    const {body} = await fetch(manager.app, '/test');
+    expect(body).toBe('bar');
+  });
 });

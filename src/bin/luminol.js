@@ -6,8 +6,7 @@ import createServer from '/createServer';
 import createClient from '/internal/createClient';
 
 import Compiler from '/internal/Compiler';
-
-import createUi from '/internal/ui';
+import logListener from '/internal/logListener';
 
 process.on('unhandledRejection', (err) => {
   console.error(err);
@@ -70,27 +69,9 @@ yargs
     },
   )
   .command(
-    'ui [url]',
-    'display UI for given url',
-    (yargs) => {
-      return yargs.option('url', {
-        type: 'string',
-      });
-    },
-    (argv) => {
-      const client = createClient(argv.url);
-      createUi(client);
-    },
-  )
-  .command(
     ['serve', '$0'],
     'serve stuff',
     {
-      ui: {
-        description: 'Enable the UI',
-        type: 'boolean',
-        default: true,
-      },
       open: {
         description: 'Automatically open the browser window',
         type: 'boolean',
@@ -137,11 +118,9 @@ yargs
         add: argv.add,
         clipboard: argv.clipboard,
       });
-      if (argv.ui) {
-        server.on('listening', () => {
-          createUi(server.client);
-        });
-      }
+      logListener(server.client, (log) => {
+        console.log(log.message);
+      });
       for (const sig of ['SIGINT', 'SIGTERM']) {
         process.on(sig, () => {
           server.close();
