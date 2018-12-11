@@ -76,7 +76,7 @@
     "node-fetch": "2.3.0",
     "prettier": "1.15.2",
     "stats-webpack-plugin": "0.7.0",
-    "webpack": "4.25.1",
+    "webpack": "4.27.1",
     "webpack-node-externals": "1.7.2"
   },
   "peerDependencies": {
