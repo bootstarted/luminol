@@ -31,7 +31,7 @@
     "color-hash": "1.0.3",
     "cross-fetch": "3.0.0",
     "cuid": "2.1.4",
-    "debug": "4.1.0",
+    "debug": "4.1.1",
     "graphql": "14.0.2",
     "graphql-subscriptions": "1.0.0",
     "graphql-tools": "4.0.3",
