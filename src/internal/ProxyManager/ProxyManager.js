@@ -2,7 +2,6 @@
 import {compose, proxy, use, next, pending, send, serve, request} from 'midori';
 import EventEmitter from 'events';
 import url from 'url';
-import {unionWith, eqBy, prop} from 'ramda';
 import gql from 'graphql-tag';
 
 import type {App, ServeOptions, ProxyOptions} from 'midori';
@@ -58,7 +57,18 @@ const defaultOptions = {
 };
 
 const proxySet = (state = [], proxy) => {
-  return unionWith(eqBy(prop('path')), [proxy], state);
+  const newState = [...state];
+  let found = false;
+  newState.forEach((oldProxy, i) => {
+    if (oldProxy.path === proxy.path) {
+      found = true;
+      newState[i] = proxy;
+    }
+  });
+  if (!found) {
+    newState.push(proxy);
+  }
+  return newState;
 };
 
 class ProxyManager {

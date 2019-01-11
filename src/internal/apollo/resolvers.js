@@ -82,6 +82,10 @@ const resolvers = {
     },
   },
   Mutation: {
+    log(_, params) {
+      pubsub.publish('logReceived', {logReceived: params});
+      return true;
+    },
     registerApp(_, params, context) {
       context.registerApp(params);
       return true;
@@ -227,6 +231,11 @@ const resolvers = {
     },
   },
   Subscription: {
+    logReceived: {
+      subscribe: () => {
+        return pubsub.asyncIterator('logReceived');
+      },
+    },
     // zz
     processRegistered: {
       subscribe: () => {

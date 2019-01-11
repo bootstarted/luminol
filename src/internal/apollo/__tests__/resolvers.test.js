@@ -18,19 +18,30 @@ describe('resolvers', () => {
         resolvers.DateTime.parseValue({f: 3});
       }).toThrow(Error);
     });
-    it('should serialize', () => {
+    it('should serialize date objects', () => {
       expect(resolvers.DateTime.serialize(new Date('2018-01-01')));
+    });
+    it('should serialize date strings', () => {
+      expect(resolvers.DateTime.serialize('2018-01-01'));
     });
     it('should parseValue', () => {
       expect(resolvers.DateTime.parseValue('2018-01-01'));
     });
-    it('should parseLiteral', () => {
+    it('should parseLiteral for strings', () => {
       expect(
         resolvers.DateTime.parseLiteral({
           kind: Kind.STRING,
           value: '2018-01-01',
         }),
-      );
+      ).not.toBe(null);
+    });
+    it('should parseLiteral for everything else', () => {
+      expect(
+        resolvers.DateTime.parseLiteral({
+          kind: Kind.BOOLEAN,
+          value: true,
+        }),
+      ).toBe(null);
     });
   });
   describe('.Query', () => {
@@ -86,6 +97,11 @@ describe('resolvers', () => {
     });
   });
   describe('.Mutation', () => {
+    describe('.log', () => {
+      it('should work', () => {
+        resolvers.Mutation.log(null, {message: 'test'});
+      });
+    });
     describe('.setCompilerStatus', () => {
       it('should work', async () => {
         const context = {getCompiler: () => ({})};
@@ -102,6 +118,14 @@ describe('resolvers', () => {
       it('should work', async () => {
         const context = {registerApp: () => {}};
         const result = await resolvers.Mutation.registerApp({}, {}, context);
+        // TODO: FIXME: Implement
+        expect(result);
+      });
+    });
+    describe('.unregisterApp', () => {
+      it('should work', async () => {
+        const context = {unregisterApp: () => {}};
+        const result = await resolvers.Mutation.unregisterApp({}, {}, context);
         // TODO: FIXME: Implement
         expect(result);
       });
@@ -267,14 +291,32 @@ describe('resolvers', () => {
   });
   describe('.Process', () => {
     describe('.logs', () => {
-      it('should work', async () => {
-        const result = await resolvers.Process.logs({logs: []}, {}, {});
+      it('should return utf8 by default', async () => {
+        const logEntry = {buffer: Buffer.from('1234')};
+        const result = await resolvers.Process.logs({logs: [logEntry]}, {}, {});
+        // TODO: FIXME: Implement
+        expect(result);
+      });
+      it('should work with base64', async () => {
+        const logEntry = {buffer: Buffer.from('1234')};
+        const result = await resolvers.Process.logs(
+          {logs: [logEntry]},
+          {encoding: 'BASE64'},
+          {},
+        );
         // TODO: FIXME: Implement
         expect(result);
       });
     });
   });
   describe('.Subscription', () => {
+    describe('.logReceived', () => {
+      it('should work', async () => {
+        const res = await resolvers.Subscription.logReceived.subscribe();
+        // TODO: FIXME: Implement
+        expect(res);
+      });
+    });
     describe('.processRegistered', () => {
       it('should work', async () => {
         const res = await resolvers.Subscription.processRegistered.subscribe();

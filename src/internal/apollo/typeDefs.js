@@ -40,10 +40,6 @@ const typeDefs = gql`
     data: String
   }
 
-  type WebpackError {
-    message: String
-  }
-
   type EnvVar {
     key: String
     value: String
@@ -102,6 +98,8 @@ const typeDefs = gql`
   }
 
   type Mutation {
+    log(message: String): Boolean
+
     requestProcessed(
       id: ID
       statusCode: Int
