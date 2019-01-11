@@ -74,7 +74,7 @@
     "jest": "23.6.0",
     "ncp": "2.0.0",
     "node-fetch": "2.3.0",
-    "prettier": "1.15.2",
+    "prettier": "1.15.3",
     "stats-webpack-plugin": "0.7.0",
     "webpack": "4.28.4",
     "webpack-node-externals": "1.7.2"
