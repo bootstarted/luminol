@@ -38,7 +38,7 @@
     "memory-fs": "0.4.1",
     "midori": "3.3.0",
     "mime-types": "2.1.21",
-    "openport": "0.0.5",
+    "openport": "0.0.6",
     "opn": "5.4.0",
     "pidusage": "2.0.17",
     "ramda": "0.26.1",
