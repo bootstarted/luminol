@@ -31,7 +31,7 @@
     "debug": "4.1.1",
     "graphql": "14.0.2",
     "graphql-subscriptions": "1.0.0",
-    "graphql-tools": "4.0.3",
+    "graphql-tools": "4.0.5",
     "midori": "3.3.0",
     "mime-types": "2.1.21",
     "openport": "0.0.6",
