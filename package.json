@@ -22,7 +22,7 @@
     "apollo-cache-inmemory": "1.3.12",
     "apollo-client": "2.4.8",
     "apollo-link-ws": "1.0.12",
-    "apollo-server-core": "2.3.1",
+    "apollo-server-core": "2.6.9",
     "backo2": "1.0.2",
     "chokidar": "2.0.4",
     "clipboardy": "1.2.3",
