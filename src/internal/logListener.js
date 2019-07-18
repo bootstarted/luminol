@@ -13,7 +13,9 @@ const logListener = (client, fn) => {
     query: LOG_SUBSCRIPTION,
   });
   return query.subscribe({
-    next: (data) => fn(data.logReceived),
+    next: (response) => {
+      fn(response.data.logReceived);
+    },
   });
 };
 

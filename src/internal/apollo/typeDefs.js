@@ -40,6 +40,10 @@ const typeDefs = gql`
     data: String
   }
 
+  type Log {
+    message: String!
+  }
+
   type EnvVar {
     key: String
     value: String
@@ -149,6 +153,7 @@ const typeDefs = gql`
   }
 
   type Subscription {
+    logReceived: Log
     compilerUpdated(compilerId: ID): Compiler
     requestProcessed: Request
     proxyRegistered: Proxy

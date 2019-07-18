@@ -118,8 +118,10 @@ yargs
         add: argv.add,
         clipboard: argv.clipboard,
       });
-      logListener(server.client, (log) => {
-        console.log(log.message);
+      server.on('ready', () => {
+        logListener(server.client, (log) => {
+          console.log(log.message);
+        });
       });
       for (const sig of ['SIGINT', 'SIGTERM']) {
         process.on(sig, () => {

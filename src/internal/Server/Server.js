@@ -86,11 +86,9 @@ const replyGql = (options) =>
         query,
       });
       return send(
-        200,
-        {
-          'Content-Type': 'application/json',
-        },
-        result,
+        result.responseInit.statusCode || 200,
+        result.responseInit.headers,
+        result.graphqlResponse,
       );
     } catch (error) {
       if (error.name !== 'HttpQueryError') {
@@ -251,6 +249,7 @@ class Server {
     if (this.options.clipboard !== false) {
       clipboardy.writeSync(this.url);
     }
+    this.base.emit('ready');
   }
 
   load(path: string) {
