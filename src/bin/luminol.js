@@ -117,6 +117,7 @@ yargs
         require: argv.require,
         add: argv.add,
         clipboard: argv.clipboard,
+        open: argv.open,
       });
       server.on('ready', () => {
         logListener(server.client, (log) => {

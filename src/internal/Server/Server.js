@@ -104,6 +104,7 @@ class Server {
   proxyManager: ?ProxyManager = null;
   processManager: ?ProcessManager = null;
   url: ?string;
+  baseUrl: ?string;
   client: ?Client = null;
   base: ?HTTPServer = null;
   q: Array<() => void> = [];
@@ -162,7 +163,9 @@ class Server {
       item(base);
     });
     this.q = [];
-    this.url = `http://localhost:${base.address().port}${this.apiPrefix}`;
+    this.baseUrl = `http://localhost:${base.address().port}`;
+    this.url = `${this.baseUrl}${this.apiPrefix}`;
+
     debug(`Using server ${this.url}`);
     let baseApp = next;
     if (typeof this.options.url === 'string') {
@@ -219,7 +222,10 @@ class Server {
     );
 
     // Responsible for managing child processes.
-    this.processManager = new ProcessManager(this.client);
+    this.processManager = new ProcessManager(this.client, {
+      url: this.url || '',
+      baseUrl: this.baseUrl || '',
+    });
 
     if (typeof this.options.config !== 'undefined') {
       const configs = Array.isArray(this.options.config)
@@ -244,10 +250,10 @@ class Server {
     }
 
     if (this.options.open === true) {
-      open(this.url);
+      open(this.baseUrl || '');
     }
     if (this.options.clipboard !== false) {
-      clipboardy.writeSync(this.url);
+      clipboardy.writeSync(this.baseUrl);
     }
     this.base.emit('ready');
   }
