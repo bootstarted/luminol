@@ -41,6 +41,11 @@ const USAGE_MUTATION = gql`
   }
 `;
 
+type Options = {
+  url: string,
+  baseUrl: string,
+};
+
 class ManagedProcess {
   rip: boolean = false;
   child = null;
@@ -50,6 +55,8 @@ class ManagedProcess {
   backoff = new Backoff({min: 1000, max: 1000 * 5});
   config: Config;
   client: Client;
+  url: string;
+  baseUrl: string;
   lastCode: ?number;
   detonateOnError = process.env.NODE_ENV === 'test';
 
@@ -58,9 +65,11 @@ class ManagedProcess {
     this._kill();
   };
 
-  constructor(client: Client, config: Config) {
+  constructor(client: Client, config: Config, options: Options = {}) {
     this.client = client;
     this.config = config;
+    this.url = options.url;
+    this.baseUrl = options.baseUrl;
     this.debug = createDebug(`process:${this.config.id}`);
     process.once('beforeExit', this._close);
     process.once('exit', this._close);
@@ -131,6 +140,8 @@ class ManagedProcess {
     const processId = this.config.id;
     const env = {
       LUMINOL_PROCESS_ID: processId,
+      LUMINOL_URL: this.baseUrl,
+      LUMINOL_API_URL: this.url,
       ...process.env,
     };
     (this.config.env || []).forEach(({key, value}) => {

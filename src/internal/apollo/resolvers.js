@@ -220,14 +220,14 @@ const resolvers = {
       const compiler = context.getCompiler(compilerId);
       compiler.status = status;
       pubsub.publish('compilerUpdated', {compilerUpdated: compiler});
-      return compiler;
+      return true;
     },
     publishCompilerState(_, {compilerId, hash, state}, context) {
       const compiler = context.getCompiler(compilerId);
       compiler.state = state;
       compiler.hash = hash;
       pubsub.publish('compilerUpdated', {compilerUpdated: compiler});
-      return compiler;
+      return true;
     },
   },
   Subscription: {

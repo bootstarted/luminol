@@ -50,12 +50,21 @@ type Process = {
   env: Array<{key: string, value: string}>,
 };
 
+type Options = {
+  url: string,
+  baseUrl: string,
+};
+
 class ProcessManager {
   instances: {[string]: ManagedProcess} = {};
   client: Client;
+  url: string;
+  baseUrl: string;
 
-  constructor(client: Client) {
+  constructor(client: Client, options: Options = {}) {
     this.client = client;
+    this.url = options.url;
+    this.baseUrl = options.baseUrl;
     const query = client.watchQuery({
       query: PROCESS_QUERY,
     });
@@ -73,7 +82,7 @@ class ProcessManager {
         return {
           ...prev,
           processes: [
-            ...prev.processes,
+            ...(prev.processes || []),
             subscriptionData.data.processRegistered,
           ],
         };
@@ -88,7 +97,7 @@ class ProcessManager {
         const id = subscriptionData.data.processUnregistered.id;
         return {
           ...prev,
-          processes: prev.processes.filter((config) => {
+          processes: (prev.processes || []).filter((config) => {
             return config.id !== id;
           }),
         };
@@ -101,7 +110,10 @@ class ProcessManager {
       return;
     }
     debug(`Loading process ${proc.id} => ${proc.path}`);
-    this.instances[proc.id] = new ManagedProcess(this.client, proc);
+    this.instances[proc.id] = new ManagedProcess(this.client, proc, {
+      url: this.url,
+      baseUrl: this.baseUrl,
+    });
   }
 
   _unload(id: string) {
