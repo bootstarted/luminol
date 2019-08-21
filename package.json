@@ -24,7 +24,7 @@
     "apollo-link-ws": "1.0.12",
     "apollo-server-core": "2.3.1",
     "backo2": "1.0.2",
-    "chokidar": "2.0.4",
+    "chokidar": "2.1.8",
     "clipboardy": "1.2.3",
     "color-hash": "1.0.3",
     "cuid": "2.1.4",
