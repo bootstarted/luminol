@@ -29,7 +29,7 @@
     "color-hash": "1.0.3",
     "cuid": "2.1.4",
     "debug": "4.1.1",
-    "graphql": "14.0.2",
+    "graphql": "14.6.0",
     "graphql-subscriptions": "1.0.0",
     "graphql-tools": "4.0.3",
     "midori": "3.3.0",
