@@ -33,7 +33,7 @@
     "graphql-subscriptions": "1.0.0",
     "graphql-tools": "4.0.3",
     "midori": "3.3.0",
-    "mime-types": "2.1.21",
+    "mime-types": "2.1.27",
     "openport": "0.0.6",
     "opn": "5.4.0",
     "pidusage": "2.0.17",
